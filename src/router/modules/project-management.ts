@@ -10,23 +10,23 @@ const ProjectManagement = {
   },
   children: [
     {
-      path: "create",
-      name: "ProjectManagementCreate",
-      component: () => import("@/views/ProjectManagement/create.vue"),
-      meta: {
-        title: "新增项目",
-        icon: "fluent-color:add-16",
-        rank: 0
-      }
-    },
-    {
       path: "index",
       name: "ProjectManagementIndex",
       component: () => import("@/views/ProjectManagement/index.vue"),
       meta: {
         title: "项目预览",
-        icon: "fluent-color:calendar-data-bar-16",
+        icon: "fluent-color:calendar-sync-16",
         rank: 1
+      }
+    },
+    {
+      path: "create",
+      name: "ProjectManagementCreate",
+      component: () => import("@/views/ProjectManagement/create.vue"),
+      meta: {
+        title: "新增项目",
+        icon: "fluent-color:calendar-edit-16",
+        rank: 0
       }
     },
     {

@@ -180,11 +180,29 @@
                 multiple
               >
                 <template #trigger>
-                  <el-button type="primary">选择文件</el-button>
+                  <div style="display: flex; gap: 0; align-items: center">
+                    <el-button
+                      type="primary"
+                      style="
+                        margin-right: 0;
+                        border-top-right-radius: 0;
+                        border-bottom-right-radius: 0;
+                      "
+                      >选择文件</el-button
+                    >
+                    <el-button
+                      type="success"
+                      style="
+                        margin-left: 0;
+                        border-top-left-radius: 0;
+                        border-bottom-left-radius: 0;
+                      "
+                      @click.stop="submitUpload"
+                    >
+                      上传到服务器
+                    </el-button>
+                  </div>
                 </template>
-                <el-button class="ml-3" type="success" @click="submitUpload">
-                  上传到服务器
-                </el-button>
                 <template #tip>
                   <div class="el-upload__tip">
                     支持上传 doc,docx,pdf 格式文件，单个文件不超过 10MB
@@ -237,13 +255,8 @@
                         :auto-upload="false"
                         :on-change="handleTopologyChange"
                       >
-                        <el-button
-                          type="primary"
-                          size="small"
-                          class="upload-button"
-                        >
-                          <el-icon class="icon-upload"><Upload /></el-icon>
-                          <span>上传图片</span>
+                        <el-button type="primary" size="small" :icon="Upload">
+                          上传图片
                         </el-button>
                       </el-upload>
                     </div>
@@ -258,9 +271,9 @@
                       <el-button
                         type="danger"
                         size="small"
+                        :icon="Delete"
                         @click="removeTopologyImage"
                       >
-                        <el-icon><Delete /></el-icon>
                         删除
                       </el-button>
                       <el-upload
@@ -270,8 +283,7 @@
                         :auto-upload="false"
                         :on-change="handleTopologyChange"
                       >
-                        <el-button type="primary" size="small">
-                          <el-icon><Refresh /></el-icon>
+                        <el-button type="primary" size="small" :icon="Refresh">
                           重新上传
                         </el-button>
                       </el-upload>
@@ -348,10 +360,10 @@ const handleTopologyChange = file => {
     };
     reader.readAsDataURL(file.raw);
   }
-  // 检查文件大小 (5MB)
-  const isLt5M = file.size / 1024 / 1024 < 5;
-  if (!isLt5M) {
-    ElMessage.error("图片大小不能超过 5MB");
+  // 检查文件大小 (100MB)
+  const isLt100M = file.size / 1024 / 1024 < 100;
+  if (!isLt100M) {
+    ElMessage.error("图片大小不能超过 100MB");
     return false;
   }
 
