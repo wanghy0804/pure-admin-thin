@@ -175,44 +175,25 @@
         </el-row>
 
         <el-row :gutter="20">
-          <!-- 第五行 - 项目文档 -->
           <el-col :span="12">
-            <el-form-item label="项目文档" prop="documents">
+            <el-form-item label="附件" prop="fileList">
               <el-upload
-                class="upload-demo"
-                action="#"
-                :on-preview="handlePreview"
-                :on-remove="handleRemove"
-                :file-list="fileList"
-                :auto-upload="false"
+                ref="uploadRef"
+                v-model:file-list="form.fileList"
+                drag
                 multiple
+                action="#"
+                class="w-[200px]!"
+                :auto-upload="false"
+                :on-remove="handleRemove"
+                :on-preview="handlePreview"
               >
-                <template #trigger>
-                  <div style="display: flex; gap: 0; align-items: center">
-                    <el-button
-                      type="primary"
-                      style="
-                        margin-right: 0;
-                        border-top-right-radius: 0;
-                        border-bottom-right-radius: 0;
-                      "
-                      >选择文件</el-button
-                    >
-                    <el-button
-                      type="success"
-                      style="
-                        margin-left: 0;
-                        border-top-left-radius: 0;
-                        border-bottom-left-radius: 0;
-                      "
-                      @click.stop="submitUpload"
-                    >
-                      上传到服务器
-                    </el-button>
-                  </div>
-                </template>
+                <div class="el-upload__text">
+                  <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+                  <div class="mt-2">点击或拖拽文件到此处上传</div>
+                </div>
                 <template #tip>
-                  <div class="el-upload__tip">
+                  <div class="el-upload__tip text-gray-500">
                     支持上传 doc,docx,pdf 格式文件，单个文件不超过 10MB
                   </div>
                 </template>
@@ -333,12 +314,17 @@
 <script setup lang="ts">
 import { ref, reactive } from "vue";
 import { ElMessage } from "element-plus";
-import { Picture } from "@element-plus/icons-vue";
+import {
+  Picture,
+  UploadFilled,
+  Delete,
+  Refresh
+} from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 const formRef = ref();
-const fileList = ref([]);
+const uploadRef = ref();
 
 // 表单数据
 const form = reactive({
@@ -356,7 +342,8 @@ const form = reactive({
   topologyType: "text",
   topologyText: "",
   topologyImage: "",
-  remark: ""
+  remark: "",
+  fileList: []
 });
 
 // 处理拓扑图上传
@@ -427,29 +414,51 @@ const rules = {
 
 // 文件上传相关方法
 const handleRemove = (file, fileList) => {
-  console.log(file, fileList);
+  form.fileList = fileList;
 };
 
 const handlePreview = file => {
-  console.log(file);
-};
-
-const submitUpload = () => {
-  if (!fileList.value || fileList.value.length === 0) {
-    ElMessage.warning("请上传文件");
-    return;
+  console.log("Preview file:", file);
+  // 这里可以添加文件预览逻辑，比如打开新窗口查看PDF等
+  if (file.raw) {
+    const fileURL = URL.createObjectURL(file.raw);
+    window.open(fileURL, "_blank");
   }
-  // 这里添加上传逻辑
-  ElMessage.success("文件上传成功");
 };
 
 // 提交表单
 const submitForm = () => {
   formRef.value.validate(valid => {
     if (valid) {
+      // 创建 FormData 对象
+      const formData = new FormData();
+
+      // 如果有上传文件，则添加到 FormData
+      if (form.fileList && form.fileList.length > 0) {
+        form.fileList.forEach(file => {
+          formData.append("files", file.raw);
+        });
+      }
+
+      // 添加其他表单数据
+      Object.keys(form).forEach(key => {
+        if (key !== "fileList") {
+          formData.append(key, form[key]);
+        }
+      });
+
       console.log("表单数据:", form);
-      ElMessage.success("项目创建成功！");
-      router.push("/ProjectManagement/index");
+      // 示例：调用API提交表单
+      // api.submitProject(formData).then(() => {
+      //   ElMessage.success("项目创建成功！");
+      //   router.push("/ProjectManagement/index");
+      // });
+
+      // 模拟API调用
+      setTimeout(() => {
+        ElMessage.success("项目创建成功！");
+        router.push("/ProjectManagement/index");
+      }, 1000);
     } else {
       ElMessage.warning("请完善表单信息");
       return false;
@@ -461,6 +470,10 @@ const submitForm = () => {
 const resetForm = () => {
   formRef.value.resetFields();
   form.servicePoints = 1; // 重置数字输入框
+  form.fileList = []; // 清空文件列表
+  if (uploadRef.value) {
+    uploadRef.value.clearFiles(); // 清空上传组件的文件列表
+  }
 };
 </script>
 
