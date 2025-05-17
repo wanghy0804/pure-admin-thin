@@ -221,7 +221,7 @@
                   <el-input
                     v-model="form.topologyText"
                     type="textarea"
-                    :rows="5"
+                    :rows="8"
                     placeholder="请描述现场环境拓扑，例如：
 1. 网络架构：核心-汇聚-接入三层架构
 2. 服务器配置：4台应用服务器，2台数据库服务器
@@ -244,7 +244,7 @@
                         :auto-upload="false"
                         :on-change="handleTopologyChange"
                       >
-                        <el-button type="primary" size="small" :icon="Upload">
+                        <el-button type="primary" size="small" :icon="Picture">
                           上传图片
                         </el-button>
                       </el-upload>
@@ -291,7 +291,7 @@
               <el-input
                 v-model="form.remark"
                 type="textarea"
-                :rows="5"
+                :rows="8"
                 placeholder="请输入需要备注的信息"
               />
             </el-form-item>
