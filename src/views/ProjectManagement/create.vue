@@ -80,12 +80,20 @@
           </el-col>
 
           <el-col :span="8">
-            <el-form-item label="密信版本" prop="version">
-              <el-input
+            <el-form-item label="密信版本" prop="versionOptions">
+              <el-select
                 v-model="form.version"
-                placeholder="请输入密信版本"
+                placeholder="请选择密信版本"
                 clearable
-              />
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="item in versionOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -339,7 +347,7 @@ const form = reactive({
   sales: "",
   projectTime: "",
   servicePoints: "",
-  version: "",
+  versionOptions: "",
   region: "",
   address: "",
   deployType: "",
@@ -403,7 +411,9 @@ const rules = {
   servicePoints: [
     { required: true, message: "请输入服务点数", trigger: "blur" }
   ],
-  version: [{ required: true, message: "请输入密信版本", trigger: "blur" }],
+  versionOptions: [
+    { required: true, message: "请选择密信版本", trigger: "change" }
+  ],
   region: [{ required: true, message: "请选择地区", trigger: "change" }],
   address: [{ required: false, message: "请输入项目地址", trigger: "blur" }],
   deployType: [
@@ -425,6 +435,10 @@ const handlePreview = file => {
 };
 
 const submitUpload = () => {
+  if (!fileList.value || fileList.value.length === 0) {
+    ElMessage.warning("请上传文件");
+    return;
+  }
   // 这里添加上传逻辑
   ElMessage.success("文件上传成功");
 };
