@@ -206,8 +206,11 @@ router.beforeEach((to: ToRouteType, _from, next) => {
 
 router.afterEach(to => {
   NProgress.done();
-  // 全局自动将所有页面加入标签栏
-  useMultiTagsStoreHook().handleTags("push", to);
+  // 全局自动将所有页面加入标签栏，但排除首页
+  const homePaths = ["/", "/welcome"];
+  if (!homePaths.includes(to.path)) {
+    useMultiTagsStoreHook().handleTags("push", to);
+  }
 });
 
 export default router;

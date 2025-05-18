@@ -8,7 +8,7 @@ export default {
   },
   children: [
     {
-      path: "index",
+      path: "/ProjectManagement/index",
       name: "ProjectManagementIndex",
       component: () => import("@/views/ProjectManagement/index.vue"),
       meta: {
@@ -17,7 +17,7 @@ export default {
       }
     },
     {
-      path: "create",
+      path: "/ProjectManagement/create",
       name: "ProjectManagementCreate",
       component: () => import("@/views/ProjectManagement/create.vue"),
       meta: {
@@ -26,7 +26,7 @@ export default {
       }
     },
     {
-      path: "detail",
+      path: "/ProjectManagement/detail",
       name: "ProjectManagementDetail",
       component: () => import("@/views/ProjectManagement/detail.vue"),
       meta: {
