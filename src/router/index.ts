@@ -204,8 +204,10 @@ router.beforeEach((to: ToRouteType, _from, next) => {
   }
 });
 
-router.afterEach(() => {
+router.afterEach(to => {
   NProgress.done();
+  // 全局自动将所有页面加入标签栏
+  useMultiTagsStoreHook().handleTags("push", to);
 });
 
 export default router;
