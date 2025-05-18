@@ -322,6 +322,10 @@ import {
 } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 
+defineOptions({
+  name: "ProjectManagementCreate"
+});
+
 const router = useRouter();
 const formRef = ref();
 const uploadRef = ref();
