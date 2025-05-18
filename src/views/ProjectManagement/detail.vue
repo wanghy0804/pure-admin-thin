@@ -9,6 +9,10 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
+defineOptions({
+  name: "ProjectManagementDetail"
+});
+
 const message = ref("欢迎来到示例详情页");
 </script>
 

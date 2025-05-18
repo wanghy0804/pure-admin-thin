@@ -9,6 +9,10 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
+defineOptions({
+  name: "ProjectManagementIndex"
+});
+
 const message = ref("欢迎来到示例首页");
 </script>
 

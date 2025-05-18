@@ -209,10 +209,9 @@
                 v-model="form.topologyType"
                 class="topology-type-selector"
               >
-                <el-radio-button label="text">文字描述</el-radio-button>
-                <el-radio-button label="drawing">绘制拓扑图</el-radio-button>
+                <el-radio-button :value="'text'">文字描述</el-radio-button>
+                <el-radio-button :value="'drawing'">绘制拓扑图</el-radio-button>
               </el-radio-group>
-
               <div class="topology-content">
                 <div
                   v-if="form.topologyType === 'text'"
@@ -229,55 +228,65 @@
 4. 安全设备：WAF、IPS等"
                   />
                 </div>
-
                 <div v-else class="drawing-area">
-                  <div v-if="!form.topologyImage" class="drawing-placeholder">
-                    <div class="placeholder-icon">
-                      <el-icon size="64"><Picture /></el-icon>
+                  <template v-if="!form.topologyImage">
+                    <div class="drawing-placeholder">
+                      <div class="placeholder-icon">
+                        <el-icon size="64"><Picture /></el-icon>
+                      </div>
+                      <p>点击或拖拽图片到此处上传</p>
+                      <div class="upload-container">
+                        <el-upload
+                          class="upload-topology"
+                          action="#"
+                          :show-file-list="false"
+                          :auto-upload="false"
+                          :on-change="handleTopologyChange"
+                        >
+                          <el-button
+                            type="primary"
+                            size="small"
+                            :icon="Picture"
+                          >
+                            上传图片
+                          </el-button>
+                        </el-upload>
+                      </div>
+                      <div class="hint-text">
+                        支持 JPG/PNG 格式，建议尺寸 800x600 像素
+                      </div>
                     </div>
-                    <p>点击或拖拽图片到此处上传</p>
-                    <div class="upload-container">
-                      <el-upload
-                        class="upload-topology"
-                        action="#"
-                        :show-file-list="false"
-                        :auto-upload="false"
-                        :on-change="handleTopologyChange"
-                      >
-                        <el-button type="primary" size="small" :icon="Picture">
-                          上传图片
+                  </template>
+                  <template v-else>
+                    <div class="drawing-preview">
+                      <img :src="form.topologyImage" alt="拓扑图预览" />
+                      <div class="drawing-actions">
+                        <el-button
+                          type="danger"
+                          size="small"
+                          :icon="Delete"
+                          @click="removeTopologyImage"
+                        >
+                          删除
                         </el-button>
-                      </el-upload>
+                        <el-upload
+                          class="ml-3"
+                          action="#"
+                          :show-file-list="false"
+                          :auto-upload="false"
+                          :on-change="handleTopologyChange"
+                        >
+                          <el-button
+                            type="primary"
+                            size="small"
+                            :icon="Refresh"
+                          >
+                            重新上传
+                          </el-button>
+                        </el-upload>
+                      </div>
                     </div>
-                    <div class="hint-text">
-                      支持 JPG/PNG 格式，建议尺寸 800x600 像素
-                    </div>
-                  </div>
-
-                  <div v-else class="drawing-preview">
-                    <img :src="form.topologyImage" alt="拓扑图预览" />
-                    <div class="drawing-actions">
-                      <el-button
-                        type="danger"
-                        size="small"
-                        :icon="Delete"
-                        @click="removeTopologyImage"
-                      >
-                        删除
-                      </el-button>
-                      <el-upload
-                        class="ml-3"
-                        action="#"
-                        :show-file-list="false"
-                        :auto-upload="false"
-                        :on-change="handleTopologyChange"
-                      >
-                        <el-button type="primary" size="small" :icon="Refresh">
-                          重新上传
-                        </el-button>
-                      </el-upload>
-                    </div>
-                  </div>
+                  </template>
                 </div>
               </div>
             </el-form-item>
@@ -285,9 +294,8 @@
         </el-row>
 
         <el-row :gutter="20">
-          <!-- 第七行 - 备注信息 -->
           <el-col :span="24">
-            <el-form-item label="备注信息" prop="remark">
+            <el-form-item label="备注" prop="remark">
               <el-input
                 v-model="form.remark"
                 type="textarea"
@@ -297,8 +305,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-
-        <el-row>
+        <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item class="form-actions">
               <el-button type="primary" @click="submitForm">提交</el-button>
@@ -312,6 +319,60 @@
 </template>
 
 <script setup lang="ts">
+// 事业部选项
+const departmentOptions = [
+  { label: "事业一部", value: "dept1" },
+  { label: "事业二部", value: "dept2" },
+  { label: "事业三部", value: "dept3" }
+];
+// 密信版本选项
+const versionOptions = [
+  { label: "标准版", value: "standard" },
+  { label: "专业版", value: "pro" },
+  { label: "旗舰版", value: "ultimate" }
+];
+// 地区选项（可根据实际需求调整层级结构）
+const regionOptions = [
+  {
+    value: "华东",
+    label: "华东",
+    children: [
+      { value: "上海", label: "上海" },
+      { value: "江苏", label: "江苏" }
+    ]
+  },
+  {
+    value: "华南",
+    label: "华南",
+    children: [
+      { value: "广东", label: "广东" },
+      { value: "广西", label: "广西" }
+    ]
+  }
+];
+// 部署方式选项
+const deployTypeOptions = [
+  { label: "本地部署", value: "local" },
+  { label: "云部署", value: "cloud" },
+  { label: "混合部署", value: "hybrid" }
+];
+// 产品类型选项
+const productTypeOptions = [
+  { label: "软件", value: "software" },
+  { label: "硬件", value: "hardware" },
+  { label: "一体机", value: "appliance" }
+];
+// 状态选项
+const statusOptions = [
+  { label: "未启动", value: "not_started" },
+  { label: "进行中", value: "in_progress" },
+  { label: "已暂停", value: "paused" },
+  { label: "已完成", value: "completed" },
+  { label: "已终止", value: "terminated" },
+  { label: "已延期", value: "delayed" },
+  { label: "已验收", value: "accepted" },
+  { label: "已归档", value: "archived" }
+];
 import { ref, reactive } from "vue";
 import { ElMessage } from "element-plus";
 import {
@@ -336,7 +397,7 @@ const form = reactive({
   name: "",
   sales: "",
   projectTime: "",
-  servicePoints: "",
+  servicePoints: 1, // 默认值为数字，避免类型警告
   versionOptions: "",
   region: "",
   address: "",
