@@ -26,6 +26,8 @@
             v-model="filterForm.department"
             placeholder="请选择事业部"
             clearable
+            class="filter-select"
+            style="width: 180px"
           >
             <el-option
               v-for="item in departmentOptions"
@@ -40,6 +42,8 @@
             v-model="filterForm.status"
             placeholder="请选择状态"
             clearable
+            class="filter-select"
+            style="width: 180px"
           >
             <el-option
               v-for="item in statusOptions"
@@ -48,6 +52,20 @@
               :value="item.value"
             />
           </el-select>
+        </el-form-item>
+        <el-form-item label="立项时间">
+          <el-date-picker
+            v-model="filterForm.projectTimeRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            style="width: 240px"
+            class="filter-date-range"
+            clearable
+          />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
@@ -392,7 +410,8 @@ const formatDate = (date: string): string => {
 const filterForm = ref({
   name: "",
   department: "",
-  status: ""
+  status: "",
+  projectTimeRange: []
 });
 
 // 分页相关
@@ -529,6 +548,8 @@ const handleDeleteProject = (project: ProjectType) => {
 };
 
 const handleSearch = () => {
+  // 调试：打印立项时间区间
+  console.log("projectTimeRange:", filterForm.value.projectTimeRange);
   // 模拟搜索逻辑
   currentPage.value = 1;
   ElMessage.success("搜索成功");
@@ -538,6 +559,7 @@ const resetFilter = () => {
   filterForm.value.name = "";
   filterForm.value.department = "";
   filterForm.value.status = "";
+  filterForm.value.projectTimeRange = [];
   ElMessage.success("重置成功");
 };
 
@@ -552,9 +574,7 @@ const handleCurrentChange = (val: number) => {
 };
 </script>
 
-<style lang="scss" scoped>
-
-
+<style lang="scss">
 // 响应式布局
 @media (width <= 768px) {
   .project-management-container {
@@ -716,5 +736,30 @@ const handleCurrentChange = (val: number) => {
       color: var(--el-text-color-disabled);
     }
   }
+}
+
+/* 强力修复 el-select、el-option 下拉内容不可见问题 */
+.el-select-dropdown,
+.el-select-dropdown__item,
+.el-option,
+.el-option__content {
+  font-size: 14px !important;
+  color: #222 !important;
+  background: #fff !important;
+}
+
+.el-select-dropdown__item.selected,
+.el-option.is-selected {
+  color: #409eff !important;
+  background: #ecf5ff !important;
+}
+
+.el-select .el-input__inner {
+  color: #222 !important;
+}
+
+/* el-date-picker 输入框字体颜色修正 */
+.el-date-editor.el-input__wrapper input {
+  color: #222 !important;
 }
 </style>
