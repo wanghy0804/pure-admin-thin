@@ -610,7 +610,6 @@ const resetForm = () => {
 .project-create {
   box-sizing: border-box;
   width: 100%;
-  max-width: 1200px;
   padding: 24px;
   margin: 0 auto;
 }
