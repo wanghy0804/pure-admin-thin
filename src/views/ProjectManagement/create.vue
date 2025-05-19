@@ -175,29 +175,14 @@
         </el-row>
 
         <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="附件" prop="fileList">
-              <el-upload
-                ref="uploadRef"
-                v-model:file-list="form.fileList"
-                drag
-                multiple
-                action="#"
-                class="w-[200px]!"
-                :auto-upload="false"
-                :on-remove="handleRemove"
-                :on-preview="handlePreview"
-              >
-                <div class="el-upload__text">
-                  <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-                  <div class="mt-2">点击或拖拽文件到此处上传</div>
-                </div>
-                <template #tip>
-                  <div class="el-upload__tip text-gray-500">
-                    支持上传 doc,docx,pdf 格式文件，单个文件不超过 10MB
-                  </div>
-                </template>
-              </el-upload>
+          <el-col :span="24">
+            <el-form-item label="项目描述" prop="description">
+              <el-input
+                v-model="form.description"
+                type="textarea"
+                :rows="3"
+                placeholder="在这里对项目进行简单的描述"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -294,17 +279,46 @@
         </el-row>
 
         <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="附件" prop="fileList">
+              <el-upload
+                ref="uploadRef"
+                v-model:file-list="form.fileList"
+                drag
+                multiple
+                action="#"
+                class="w-[200px]!"
+                :auto-upload="false"
+                :on-remove="handleRemove"
+                :on-preview="handlePreview"
+              >
+                <div class="el-upload__text">
+                  <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+                  <div class="mt-2">点击或拖拽文件到此处上传</div>
+                </div>
+                <template #tip>
+                  <div class="el-upload__tip text-gray-500">
+                    支持上传 doc,docx,pdf 格式文件，单个文件不超过 10MB
+                  </div>
+                </template>
+              </el-upload>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item label="备注" prop="remark">
               <el-input
                 v-model="form.remark"
                 type="textarea"
                 :rows="8"
-                placeholder="请输入需要备注的信息"
+                placeholder="项目的备注信息"
               />
             </el-form-item>
           </el-col>
         </el-row>
+
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item class="form-actions">
