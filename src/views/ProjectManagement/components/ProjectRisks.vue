@@ -5,8 +5,21 @@
         <div class="card-header">
           <span class="font-medium">风险与问题</span>
           <div class="header-actions">
-            <el-button type="primary" size="small" @click="openAddRiskDialog">
+            <el-button
+              v-if="activeTab === 'risks'"
+              type="primary"
+              size="small"
+              @click="openAddRiskDialog"
+            >
               <el-icon><Plus /></el-icon> 添加风险
+            </el-button>
+            <el-button
+              v-if="activeTab === 'issues'"
+              type="primary"
+              size="small"
+              @click="openAddIssueDialog"
+            >
+              <el-icon><Plus /></el-icon> 添加问题
             </el-button>
           </div>
         </div>
@@ -71,6 +84,7 @@
                       >详情</el-button
                     >
                     <el-button
+                      v-if="row.status !== '已关闭'"
                       type="success"
                       link
                       size="small"
@@ -86,6 +100,10 @@
           <!-- 问题记录 -->
           <el-tab-pane label="问题记录" name="issues">
             <div class="issue-list">
+              <ProjectAddIssueDialog
+                ref="addIssueDialogRef"
+                @submit="handleAddIssueSubmit"
+              />
               <el-table :data="riskData.issues" style="width: 100%" border>
                 <el-table-column prop="id" label="ID" width="80" />
                 <el-table-column
@@ -125,9 +143,24 @@
                   </template>
                 </el-table-column>
                 <el-table-column label="操作" width="150">
-                  <template #default>
-                    <el-button type="primary" link size="small">详情</el-button>
-                    <el-button type="success" link size="small">解决</el-button>
+                  <template #default="{ row }">
+                    <el-button
+                      type="primary"
+                      link
+                      size="small"
+                      @click="openIssueDetail(row)"
+                    >
+                      详情
+                    </el-button>
+                    <el-button
+                      v-if="row.status !== '已关闭'"
+                      type="success"
+                      link
+                      size="small"
+                      @click="openIssueEdit(row)"
+                    >
+                      解决
+                    </el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -231,7 +264,6 @@
             <el-option label="处理中" value="处理中" />
             <el-option label="已缓解" value="已缓解" />
             <el-option label="已解决" value="已解决" />
-            <el-option label="已关闭" value="已关闭" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -243,10 +275,10 @@
       </template>
     </el-dialog>
 
-    <!-- 风险详情弹窗 -->
+    <!-- 详情弹窗 -->
     <el-dialog
       v-model="riskDetailDialogVisible"
-      title="风险详情"
+      :title="detailType === 'risk' ? '风险详情' : '问题详情'"
       width="600px"
       :before-close="
         () => {
@@ -254,7 +286,7 @@
         }
       "
     >
-      <el-form v-if="currentRisk" label-width="100px">
+      <el-form v-if="currentRisk && detailType === 'risk'" label-width="100px">
         <el-form-item label="风险描述">
           <el-input :model-value="currentRisk.title" disabled />
         </el-form-item>
@@ -302,6 +334,38 @@
           </el-select>
         </el-form-item>
       </el-form>
+      <el-form v-if="currentRisk && detailType === 'issue'" label-width="100px">
+        <el-form-item label="问题描述">
+          <el-input :model-value="currentRisk.title" disabled />
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-input :model-value="currentRisk.type" disabled />
+        </el-form-item>
+        <el-form-item label="优先级">
+          <el-input :model-value="currentRisk.priority" disabled />
+        </el-form-item>
+        <el-form-item label="报告人">
+          <el-input :model-value="currentRisk.reporter" disabled />
+        </el-form-item>
+        <el-form-item label="负责人">
+          <el-input :model-value="currentRisk.assignee" disabled />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select
+            :model-value="currentRisk.status"
+            disabled
+            style="width: 100%"
+          >
+            <el-option label="未解决" value="未解决" />
+            <el-option label="处理中" value="处理中" />
+            <el-option label="已解决" value="已解决" />
+            <el-option label="已关闭" value="已关闭" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="创建时间">
+          <el-input :model-value="currentRisk.createdAt" disabled />
+        </el-form-item>
+      </el-form>
       <template #footer>
         <el-button @click="riskDetailDialogVisible = false">关闭</el-button>
       </template>
@@ -309,6 +373,7 @@
 
     <!-- 风险处理弹窗 -->
     <el-dialog
+      v-if="currentRisk && detailType === 'risk'"
       v-model="riskEditDialogVisible"
       title="处理风险"
       width="600px"
@@ -318,7 +383,7 @@
         }
       "
     >
-      <el-form v-if="currentRisk" label-width="100px">
+      <el-form label-width="100px">
         <el-form-item label="风险描述">
           <el-input v-model="currentRisk.title" />
         </el-form-item>
@@ -368,6 +433,51 @@
         <el-button type="primary" @click="saveRiskEdit">保存</el-button>
       </template>
     </el-dialog>
+    <!-- 问题处理弹窗 -->
+    <el-dialog
+      v-if="currentRisk && detailType === 'issue'"
+      v-model="riskEditDialogVisible"
+      title="处理问题"
+      width="600px"
+      :before-close="
+        () => {
+          riskEditDialogVisible = false;
+        }
+      "
+    >
+      <el-form label-width="100px">
+        <el-form-item label="问题描述">
+          <el-input v-model="currentRisk.title" />
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-input v-model="currentRisk.type" />
+        </el-form-item>
+        <el-form-item label="优先级">
+          <el-input v-model="currentRisk.priority" />
+        </el-form-item>
+        <el-form-item label="报告人">
+          <el-input v-model="currentRisk.reporter" />
+        </el-form-item>
+        <el-form-item label="负责人">
+          <el-input v-model="currentRisk.assignee" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="currentRisk.status" style="width: 100%">
+            <el-option label="未解决" value="未解决" />
+            <el-option label="处理中" value="处理中" />
+            <el-option label="已解决" value="已解决" />
+            <el-option label="已关闭" value="已关闭" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="创建时间">
+          <el-input v-model="currentRisk.createdAt" disabled />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="riskEditDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveRiskEdit">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -375,6 +485,22 @@
 import { cloneDeep } from "lodash-es";
 import { defineProps, ref, reactive } from "vue";
 import { Plus } from "@element-plus/icons-vue";
+import ProjectAddIssueDialog from "./ProjectAddIssueDialog.vue";
+
+// 添加问题弹窗（占位实现）
+const addIssueDialogRef = ref();
+const openAddIssueDialog = () => {
+  addIssueDialogRef.value?.open();
+};
+function handleAddIssueSubmit(issue) {
+  // 添加到 riskData.issues
+  const newId = `I${String(riskData.value.issues.length + 1).padStart(3, "0")}`;
+  riskData.value.issues.push({
+    ...issue,
+    id: newId,
+    createdAt: new Date().toISOString().slice(0, 10)
+  });
+}
 import type { FormInstance, FormRules } from "element-plus";
 
 const props = defineProps({
@@ -390,11 +516,25 @@ const riskDetailDialogVisible = ref(false);
 const riskEditDialogVisible = ref(false);
 const currentRisk = ref<any>(null);
 
-// 打开详情弹窗
+// 打开详情弹窗（风险/问题通用）
+const detailType = ref("risk");
 function openRiskDetail(row: any) {
   currentRisk.value = cloneDeep(row);
+  detailType.value = "risk";
   riskDetailDialogVisible.value = true;
 }
+function openIssueDetail(row: any) {
+  currentRisk.value = cloneDeep(row);
+  detailType.value = "issue";
+  riskDetailDialogVisible.value = true;
+  issueDetailReadonly.value = true;
+}
+function openIssueEdit(row: any) {
+  currentRisk.value = cloneDeep(row);
+  riskEditDialogVisible.value = true;
+  issueDetailReadonly.value = false;
+}
+const issueDetailReadonly = ref(false);
 // 打开编辑弹窗
 function openRiskEdit(row: any) {
   currentRisk.value = cloneDeep(row);
@@ -616,6 +756,16 @@ const riskData = ref({
       assignee: "李四",
       createdAt: "2025-03-25",
       status: "未解决"
+    },
+    {
+      id: "I004",
+      title: "兼容性问题已关闭",
+      type: "兼容性问题",
+      priority: "低",
+      reporter: "张三",
+      assignee: "王五",
+      createdAt: "2025-04-01",
+      status: "已关闭"
     }
   ],
   changes: [
