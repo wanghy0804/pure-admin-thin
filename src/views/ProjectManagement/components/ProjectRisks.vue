@@ -5,7 +5,7 @@
         <div class="card-header">
           <span class="font-medium">风险与问题</span>
           <div class="header-actions">
-            <el-button type="primary" size="small">
+            <el-button type="primary" size="small" @click="openAddRiskDialog">
               <el-icon><Plus /></el-icon> 添加风险
             </el-button>
           </div>
@@ -13,7 +13,7 @@
       </template>
 
       <div v-if="project" class="risks-content">
-        <el-tabs v-model="activeTab" class="risk-tabs">
+        <el-tabs v-model="activeTab" class="risk-tabs centered-tabs">
           <!-- 风险清单 -->
           <el-tab-pane label="风险清单" name="risks">
             <div class="risk-list">
@@ -41,14 +41,15 @@
                     {{ row.probability }}%
                   </template>
                 </el-table-column>
-                <el-table-column prop="impact" label="影响" width="100">
+                <el-table-column prop="impact" label="影响" width="180">
                   <template #default="{ row }">
                     <el-rate
-                      v-model="row.impact"
+                      :model-value="Number(row.impact)"
                       disabled
                       show-score
                       text-color="#ff9900"
                       score-template="{value}"
+                      style="width: 100%"
                     />
                   </template>
                 </el-table-column>
@@ -61,17 +62,29 @@
                   </template>
                 </el-table-column>
                 <el-table-column label="操作" width="150">
-                  <template #default>
-                    <el-button type="primary" link size="small">详情</el-button>
-                    <el-button type="success" link size="small">处理</el-button>
+                  <template #default="{ row }">
+                    <el-button
+                      type="primary"
+                      link
+                      size="small"
+                      @click="openRiskDetail(row)"
+                      >详情</el-button
+                    >
+                    <el-button
+                      type="success"
+                      link
+                      size="small"
+                      @click="openRiskEdit(row)"
+                      >处理</el-button
+                    >
                   </template>
                 </el-table-column>
               </el-table>
             </div>
           </el-tab-pane>
 
-          <!-- 问题列表 -->
-          <el-tab-pane label="问题列表" name="issues">
+          <!-- 问题记录 -->
+          <el-tab-pane label="问题记录" name="issues">
             <div class="issue-list">
               <el-table :data="riskData.issues" style="width: 100%" border>
                 <el-table-column prop="id" label="ID" width="80" />
@@ -162,18 +175,307 @@
         <el-empty description="请选择项目" />
       </div>
     </el-card>
+
+    <!-- 添加风险弹窗 -->
+    <el-dialog
+      v-model="dialogVisible"
+      title="添加新风险"
+      width="600px"
+      :before-close="handleCloseDialog"
+    >
+      <el-form
+        ref="riskFormRef"
+        :model="newRiskForm"
+        :rules="riskFormRules"
+        label-width="100px"
+      >
+        <el-form-item label="风险描述" prop="title">
+          <el-input v-model="newRiskForm.title" placeholder="请输入风险描述" />
+        </el-form-item>
+        <el-form-item label="风险类别" prop="category">
+          <el-input
+            v-model="newRiskForm.category"
+            placeholder="请输入风险类别"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="风险级别" prop="level">
+          <el-select v-model="newRiskForm.level" placeholder="请选择风险级别">
+            <el-option label="高" value="高" />
+            <el-option label="中" value="中" />
+            <el-option label="低" value="低" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="发生概率" prop="probability">
+          <el-input-number
+            v-model="newRiskForm.probability"
+            :min="0"
+            :max="100"
+            placeholder="请输入发生概率"
+          />%
+        </el-form-item>
+        <el-form-item label="影响程度" prop="impact">
+          <el-rate
+            v-model="newRiskForm.impact"
+            :max="5"
+            show-score
+            text-color="#ff9900"
+          />
+        </el-form-item>
+        <el-form-item label="负责人" prop="owner">
+          <el-input v-model="newRiskForm.owner" placeholder="请输入负责人" />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-select v-model="newRiskForm.status" placeholder="请选择状态">
+            <el-option label="未处理" value="未处理" />
+            <el-option label="处理中" value="处理中" />
+            <el-option label="已缓解" value="已缓解" />
+            <el-option label="已解决" value="已解决" />
+            <el-option label="已关闭" value="已关闭" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="handleCloseDialog">取消</el-button>
+          <el-button type="primary" @click="handleAddRisk">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 风险详情弹窗 -->
+    <el-dialog
+      v-model="riskDetailDialogVisible"
+      title="风险详情"
+      width="600px"
+      :before-close="
+        () => {
+          riskDetailDialogVisible = false;
+        }
+      "
+    >
+      <el-form v-if="currentRisk" label-width="100px">
+        <el-form-item label="风险描述">
+          <el-input :model-value="currentRisk.title" disabled />
+        </el-form-item>
+        <el-form-item label="风险类别">
+          <el-input :model-value="currentRisk.category" disabled />
+        </el-form-item>
+        <el-form-item label="风险级别">
+          <el-select
+            :model-value="currentRisk.level"
+            disabled
+            style="width: 100%"
+          >
+            <el-option label="高" value="高" />
+            <el-option label="中" value="中" />
+            <el-option label="低" value="低" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="发生概率">
+          <el-input-number :model-value="currentRisk.probability" disabled /> %
+        </el-form-item>
+        <el-form-item label="影响程度">
+          <el-rate
+            :model-value="Number(currentRisk.impact)"
+            disabled
+            show-score
+            text-color="#ff9900"
+            score-template="{value}"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="负责人">
+          <el-input :model-value="currentRisk.owner" disabled />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select
+            :model-value="currentRisk.status"
+            disabled
+            style="width: 100%"
+          >
+            <el-option label="未处理" value="未处理" />
+            <el-option label="处理中" value="处理中" />
+            <el-option label="已缓解" value="已缓解" />
+            <el-option label="已解决" value="已解决" />
+            <el-option label="已关闭" value="已关闭" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="riskDetailDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 风险处理弹窗 -->
+    <el-dialog
+      v-model="riskEditDialogVisible"
+      title="处理风险"
+      width="600px"
+      :before-close="
+        () => {
+          riskEditDialogVisible = false;
+        }
+      "
+    >
+      <el-form v-if="currentRisk" label-width="100px">
+        <el-form-item label="风险描述">
+          <el-input v-model="currentRisk.title" />
+        </el-form-item>
+        <el-form-item label="风险类别">
+          <el-input v-model="currentRisk.category" />
+        </el-form-item>
+        <el-form-item label="风险级别">
+          <el-select v-model="currentRisk.level" style="width: 100%">
+            <el-option label="高" value="高" />
+            <el-option label="中" value="中" />
+            <el-option label="低" value="低" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="发生概率">
+          <el-input-number
+            v-model="currentRisk.probability"
+            :min="0"
+            :max="100"
+          />
+          %
+        </el-form-item>
+        <el-form-item label="影响程度">
+          <el-rate
+            v-model="currentRisk.impact"
+            :max="5"
+            show-score
+            text-color="#ff9900"
+            score-template="{value}"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="负责人">
+          <el-input v-model="currentRisk.owner" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="currentRisk.status" style="width: 100%">
+            <el-option label="未处理" value="未处理" />
+            <el-option label="处理中" value="处理中" />
+            <el-option label="已缓解" value="已缓解" />
+            <el-option label="已解决" value="已解决" />
+            <el-option label="已关闭" value="已关闭" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="riskEditDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveRiskEdit">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref } from "vue";
+import { cloneDeep } from "lodash-es";
+import { defineProps, ref, reactive } from "vue";
 import { Plus } from "@element-plus/icons-vue";
+import type { FormInstance, FormRules } from "element-plus";
 
 const props = defineProps({
   project: Object
 });
 
 const activeTab = ref("risks");
+const dialogVisible = ref(false);
+const riskFormRef = ref<FormInstance>();
+
+// 弹窗控制变量和当前风险数据
+const riskDetailDialogVisible = ref(false);
+const riskEditDialogVisible = ref(false);
+const currentRisk = ref<any>(null);
+
+// 打开详情弹窗
+function openRiskDetail(row: any) {
+  currentRisk.value = cloneDeep(row);
+  riskDetailDialogVisible.value = true;
+}
+// 打开编辑弹窗
+function openRiskEdit(row: any) {
+  currentRisk.value = cloneDeep(row);
+  riskEditDialogVisible.value = true;
+}
+// 保存编辑
+function saveRiskEdit() {
+  if (!currentRisk.value) return;
+  // 查找并更新riskData.risks里对应项
+  const idx = riskData.value.risks.findIndex(
+    r => r.id === currentRisk.value.id
+  );
+  if (idx !== -1) {
+    riskData.value.risks[idx] = cloneDeep(currentRisk.value);
+  }
+  riskEditDialogVisible.value = false;
+}
+
+const initialNewRiskForm = () => ({
+  id: "",
+  title: "",
+  category: "",
+  level: "中",
+  probability: 0,
+  impact: 3,
+  owner: "",
+  status: "未处理"
+});
+
+const newRiskForm = reactive(initialNewRiskForm());
+
+const riskFormRules = reactive<FormRules>({
+  title: [{ required: true, message: "请输入风险描述", trigger: "blur" }],
+  category: [{ required: true, message: "请输入风险类别", trigger: "blur" }],
+  level: [{ required: true, message: "请选择风险级别", trigger: "change" }],
+  probability: [
+    { required: true, message: "请输入发生概率", trigger: "blur" },
+    {
+      type: "number",
+      min: 0,
+      max: 100,
+      message: "概率必须在0-100之间",
+      trigger: "blur"
+    }
+  ],
+  impact: [{ required: true, message: "请选择影响程度", trigger: "change" }],
+  owner: [{ required: true, message: "请输入负责人", trigger: "blur" }],
+  status: [{ required: true, message: "请选择状态", trigger: "change" }]
+});
+
+const openAddRiskDialog = () => {
+  Object.assign(newRiskForm, initialNewRiskForm()); // Reset form
+  if (riskFormRef.value) {
+    riskFormRef.value.clearValidate();
+  }
+  dialogVisible.value = true;
+};
+
+const handleCloseDialog = () => {
+  if (riskFormRef.value) {
+    riskFormRef.value.resetFields(); // More robust reset
+  }
+  dialogVisible.value = false;
+};
+
+const handleAddRisk = async () => {
+  if (!riskFormRef.value) return;
+  await riskFormRef.value.validate(valid => {
+    if (valid) {
+      const newId = `R${String(riskData.value.risks.length + 1).padStart(
+        3,
+        "0"
+      )}`;
+      riskData.value.risks.push({ ...newRiskForm, id: newId });
+      handleCloseDialog();
+    } else {
+      console.log("error submit!");
+      return false;
+    }
+  });
+};
 
 // 风险级别标签类型
 function getRiskLevelType(level) {
@@ -419,5 +721,19 @@ const riskData = ref({
 
 .empty-state {
   padding: 30px 0;
+}
+
+.centered-tabs .el-tabs__nav-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.centered-tabs .el-tabs__nav {
+  float: none;
+  display: inline-flex;
+}
+
+.centered-tabs .el-tabs__item {
+  padding: 0 20px;
 }
 </style>
