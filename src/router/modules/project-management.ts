@@ -26,13 +26,15 @@ export default {
       }
     },
     {
-      path: "/ProjectManagement/detail",
+      path: "/ProjectManagement/detail/:id?",
       name: "ProjectManagementDetail",
       component: () => import("@/views/ProjectManagement/detail.vue"),
       meta: {
         title: "项目详情",
-        icon: "fluent-color:calendar-data-bar-16"
-      }
+        icon: "fluent-color:calendar-data-bar-16",
+        dynamicNewTab: true
+      },
+      props: true
     }
   ]
 };
