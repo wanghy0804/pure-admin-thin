@@ -264,8 +264,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
-
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -355,7 +353,6 @@ onMounted(() => {
   letter-spacing: 1px;
   text-shadow: 0 2px 4px rgb(33 150 243 / 20%);
   background: linear-gradient(120deg, #42a5f5, #2196f3, #1e88e5);
-  background-clip: text;
   background-clip: text;
   animation: shimmer 3s infinite linear;
 }
