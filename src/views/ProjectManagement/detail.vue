@@ -18,7 +18,15 @@
             项目编号: {{ latestProject.id }}
           </el-tag>
         </h1>
-        <h1 v-else>请选择项目</h1>
+        <h1 v-else class="empty-project-title">
+          <svg class="folder-icon" viewBox="0 0 24 24" width="32" height="32">
+            <path
+              fill="#42A5F5"
+              d="M19,20H4C2.89,20 2,19.1 2,18V6C2,4.89 2.89,4 4,4H10L12,6H19A2,2 0 0,1 21,8H21L4,8V18L6.14,10H23.21L20.93,18.5C20.7,19.37 19.92,20 19,20Z"
+            />
+          </svg>
+          <span class="artistic-text">请选择项目</span>
+        </h1>
         <div v-if="currentProject || latestProject" class="project-subtitle">
           <el-icon><Calendar /></el-icon>
           <span>创建时间: {{ formatDate(new Date()) }}</span>
@@ -113,16 +121,76 @@ function formatDate(date) {
 // 模拟获取项目数据，实际应通过接口获取
 function fetchProject(projectId: string): any {
   const projectsData = [
-    { value: "项目A", id: "1", manager: "张三" },
-    { value: "项目B", id: "2", manager: "李四" },
-    { value: "项目C", id: "3", manager: "王五" }
+    {
+      value: "企业级项目管理系统",
+      id: "1001",
+      manager: "张三",
+      projectTime: "2025-05-01",
+      department: "技术研发部",
+      sales: "李四",
+      servicePoints: 5,
+      version: "v2.5.1",
+      region: "华北",
+      productType: "企业级应用",
+      deployType: "私有化部署",
+      status: "进行中",
+      description:
+        "这是一个企业级项目管理系统，旨在提高团队协作效率和项目透明度。"
+    },
+    {
+      value: "智能工厂系统",
+      id: "1002",
+      manager: "李四",
+      projectTime: "2025-04-15",
+      department: "工业自动化部",
+      sales: "王五",
+      servicePoints: 8,
+      version: "v3.0.0",
+      region: "华东",
+      productType: "工业系统",
+      deployType: "云部署",
+      status: "已完成",
+      description: "面向工业4.0的智能工厂系统，实现生产全流程数字化管理与监控。"
+    },
+    {
+      value: "医疗健康平台",
+      id: "1003",
+      manager: "王五",
+      projectTime: "2025-03-20",
+      department: "医疗健康部",
+      sales: "赵六",
+      servicePoints: 6,
+      version: "v1.8.5",
+      region: "华南",
+      productType: "医疗平台",
+      deployType: "混合部署",
+      status: "未开始",
+      description:
+        "整合医疗资源与健康数据，提供智能化医疗服务与健康管理解决方案。"
+    }
   ];
   return projectsData.find(p => p.id === projectId);
 }
 
 // 模拟获取最新项目，实际应通过接口获取
 function fetchLatestProject(): void {
-  latestProject.value = { value: "项目A", id: "1", manager: "张三" };
+  // 获取第一个项目作为最新项目
+  latestProject.value = {
+    value: "企业级项目管理系统",
+    id: "1001",
+    manager: "张三",
+    projectTime: "2025-05-01",
+    department: "技术研发部",
+    sales: "李四",
+    servicePoints: 5,
+    version: "v2.5.1",
+    region: "华北",
+    productType: "企业级应用",
+    deployType: "私有化部署",
+    status: "进行中",
+    description:
+      "这是一个企业级项目管理系统，旨在提高团队协作效率和项目透明度。"
+  };
 }
 
 // 当用户从搜索栏选择项目时
@@ -196,6 +264,32 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
 .ProjectManagement-detail {
   padding: 20px;
 }
@@ -239,6 +333,31 @@ onMounted(() => {
   color: #606266 !important;
   background-color: #f0f0f0 !important;
   border: 1px solid #e0e0e0 !important;
+}
+
+.empty-project-title {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  color: #409eff;
+}
+
+.folder-icon {
+  filter: drop-shadow(0 2px 5px rgb(66 165 245 / 40%));
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.artistic-text {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 300;
+  color: transparent;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgb(33 150 243 / 20%);
+  background: linear-gradient(120deg, #42a5f5, #2196f3, #1e88e5);
+  background-clip: text;
+  background-clip: text;
+  animation: shimmer 3s infinite linear;
 }
 
 .project-subtitle {
