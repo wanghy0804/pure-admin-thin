@@ -13,7 +13,7 @@
       </template>
 
       <div v-if="project" class="docs-content">
-        <el-tabs v-model="activeTab" class="docs-tabs">
+        <el-tabs v-model="activeTab" class="docs-tabs" stretch>
           <!-- 文档库 -->
           <el-tab-pane label="文档库" name="documents">
             <div class="document-list">
