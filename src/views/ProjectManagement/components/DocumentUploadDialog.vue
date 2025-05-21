@@ -2,7 +2,7 @@
   <el-dialog
     v-model="visible"
     title="上传文档"
-    width="600px"
+    width="700px"
     :before-close="handleClose"
   >
     <el-form
@@ -11,70 +11,26 @@
       :rules="rules"
       label-width="100px"
     >
-      <el-form-item label="文档名称" prop="name">
-        <el-input v-model="form.name" placeholder="请输入文档名称" />
-      </el-form-item>
-
-      <el-form-item label="文档类型" prop="type">
-        <el-select
-          v-model="form.type"
-          placeholder="请选择文档类型"
-          style="width: 100%"
-        >
-          <el-option label="Word文档" value="Word" />
-          <el-option label="Excel表格" value="Excel" />
-          <el-option label="PPT演示文稿" value="PPT" />
-          <el-option label="PDF文档" value="PDF" />
-          <el-option label="图片" value="Image" />
-          <el-option label="其他" value="Other" />
-        </el-select>
-      </el-form-item>
-
-      <el-form-item label="上传文件" prop="file">
+      <el-form-item label="上传文件" prop="files">
         <el-upload
           class="upload-area"
           drag
+          multiple
           action="#"
           :auto-upload="false"
-          :limit="1"
+          :limit="10"
           :on-change="handleFileChange"
           :on-remove="handleFileRemove"
+          :file-list="fileList"
         >
           <el-icon class="el-icon--upload"><upload-filled /></el-icon>
           <div class="el-upload__text">拖拽文件到此处或 <em>点击上传</em></div>
           <template #tip>
             <div class="el-upload__tip">
-              支持各类文档格式，单个文件不超过20MB
+              支持各类文档格式，单个文件不超过20MB，最多可上传10个文件
             </div>
           </template>
         </el-upload>
-      </el-form-item>
-
-      <el-form-item label="文档描述" prop="description">
-        <el-input
-          v-model="form.description"
-          type="textarea"
-          :rows="3"
-          placeholder="请输入文档描述（选填）"
-        />
-      </el-form-item>
-
-      <el-form-item label="文档标签" prop="tags">
-        <el-select
-          v-model="form.tags"
-          multiple
-          filterable
-          allow-create
-          default-first-option
-          placeholder="请选择或创建标签（选填）"
-          style="width: 100%"
-        >
-          <el-option label="需求文档" value="需求文档" />
-          <el-option label="设计文档" value="设计文档" />
-          <el-option label="技术方案" value="技术方案" />
-          <el-option label="测试报告" value="测试报告" />
-          <el-option label="会议记录" value="会议记录" />
-        </el-select>
       </el-form-item>
 
       <el-form-item label="权限设置" prop="permission">
@@ -113,7 +69,8 @@
       <span class="dialog-footer">
         <el-button :disabled="isUploading" @click="handleClose">取消</el-button>
         <el-button type="primary" :loading="isUploading" @click="handleSubmit">
-          <el-icon><upload-filled /></el-icon> 上传
+          <el-icon><upload-filled /></el-icon>
+          {{ fileList.length > 1 ? `上传 ${fileList.length} 个文件` : "上传" }}
         </el-button>
       </span>
     </template>
@@ -121,8 +78,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineEmits, computed } from "vue";
-import { UploadFilled } from "@element-plus/icons-vue";
+import { ref, defineEmits, computed, reactive } from "vue";
+import { UploadFilled, Setting } from "@element-plus/icons-vue";
+import { ElMessage } from "element-plus";
 import type { FormInstance, FormRules } from "element-plus";
 
 const emits = defineEmits(["update:visible", "upload-complete"]);
@@ -131,12 +89,16 @@ const uploadFormRef = ref<FormInstance>();
 const isUploading = ref(false);
 const uploadProgress = ref(0);
 const uploadStatus = ref("");
-const selectedFile = ref(null);
+const fileList = ref([]);
+const showBatchSettings = ref(false);
+const batchSettings = reactive({
+  tags: [],
+  permission: "public",
+  visibleTo: []
+});
 
 const form = ref({
-  name: "",
-  type: "",
-  file: null,
+  files: [],
   description: "",
   tags: [],
   permission: "public",
@@ -144,9 +106,6 @@ const form = ref({
 });
 
 const rules = ref<FormRules>({
-  name: [{ required: true, message: "请输入文档名称", trigger: "blur" }],
-  type: [{ required: true, message: "请选择文档类型", trigger: "change" }],
-  file: [{ required: true, message: "请上传文件", trigger: "change" }],
   visibleTo: [
     {
       required: true,
@@ -176,9 +135,7 @@ const progressText = computed(() => {
 function open() {
   // 重置表单数据
   form.value = {
-    name: "",
-    type: "",
-    file: null,
+    files: [],
     description: "",
     tags: [],
     permission: "public",
@@ -189,7 +146,8 @@ function open() {
   isUploading.value = false;
   uploadProgress.value = 0;
   uploadStatus.value = "";
-  selectedFile.value = null;
+  fileList.value = [];
+  showBatchSettings.value = false;
 
   // 如果表单实例存在，清除验证
   if (uploadFormRef.value) {
@@ -216,40 +174,53 @@ function handleClose() {
   emits("update:visible", false);
 }
 
-function handleFileChange(file) {
-  selectedFile.value = file;
-  form.value.file = file;
+function handleFileChange(file, files) {
+  // 更新文件列表
+  form.value.files = files;
+  // 保存当前文件列表的引用
+  fileList.value = files;
+  console.log("Files changed:", files.length, files);
+}
 
-  // 如果用户没有输入文档名称，使用文件名
-  if (!form.value.name && file.name) {
-    const fileName = file.name.split(".");
-    fileName.pop(); // 移除扩展名
-    form.value.name = fileName.join(".");
-  }
+function handleFileRemove(file, files) {
+  // 更新文件列表
+  form.value.files = files;
+  // 保存当前文件列表的引用
+  fileList.value = files;
+  console.log("Files after remove:", files.length, files);
+}
 
-  // 根据文件扩展名自动选择文档类型
-  const extension = file.name.split(".").pop().toLowerCase();
+// 获取文件类型
+function getFileType(fileName) {
+  const extension = fileName.split(".").pop().toLowerCase();
   if (["doc", "docx"].includes(extension)) {
-    form.value.type = "Word";
+    return "Word";
   } else if (["xls", "xlsx"].includes(extension)) {
-    form.value.type = "Excel";
+    return "Excel";
   } else if (["ppt", "pptx"].includes(extension)) {
-    form.value.type = "PPT";
+    return "PPT";
   } else if (extension === "pdf") {
-    form.value.type = "PDF";
+    return "PDF";
   } else if (["jpg", "jpeg", "png", "gif", "bmp"].includes(extension)) {
-    form.value.type = "Image";
+    return "Image";
   } else {
-    form.value.type = "Other";
+    return "Other";
   }
 }
 
-function handleFileRemove() {
-  selectedFile.value = null;
-  form.value.file = null;
+// 获取文件名（包含扩展名）
+function getFileName(fileName) {
+  return fileName; // 直接返回完整文件名
 }
 
 function handleSubmit() {
+  console.log("Submitting with files:", fileList.value.length);
+
+  if (fileList.value.length === 0) {
+    ElMessage.warning("请至少上传一个文件");
+    return;
+  }
+
   uploadFormRef.value?.validate((valid: boolean) => {
     if (valid) {
       startUpload();
@@ -258,21 +229,12 @@ function handleSubmit() {
 }
 
 function startUpload() {
-  if (!form.value.file || isUploading.value) return;
+  if (fileList.value.length === 0 || isUploading.value) return;
 
   // 模拟上传过程
   isUploading.value = true;
   uploadProgress.value = 0;
   uploadStatus.value = "";
-
-  // 准备上传数据
-  const uploadData = {
-    ...form.value,
-    // 计算文件大小
-    size: formatFileSize(selectedFile.value.size),
-    uploader: "当前用户", // 实际应用中应该是当前登录用户
-    uploadTime: new Date().toLocaleString()
-  };
 
   // 模拟上传进度
   const interval = setInterval(() => {
@@ -282,8 +244,19 @@ function startUpload() {
       clearInterval(interval);
       uploadStatus.value = "success";
 
-      // 上传完成后通知父组件
-      emits("upload-complete", uploadData);
+      // 上传完成后通知父组件 - 发送所有上传的文件
+      fileList.value.forEach(file => {
+        const uploadedFile = {
+          name: getFileName(file.name),
+          type: getFileType(file.name),
+          size: formatFileSize(file.size),
+          uploader: "当前用户", // 实际应用中应该是当前登录用户
+          uploadTime: new Date().toLocaleString(),
+          permission: form.value.permission,
+          visibleTo: form.value.visibleTo
+        };
+        emits("upload-complete", uploadedFile);
+      });
 
       // 上传完成后2秒关闭弹窗
       setTimeout(() => {
@@ -316,6 +289,17 @@ defineExpose({ open });
 <style scoped>
 .upload-area {
   width: 100%;
+}
+
+.placeholder-text {
+  font-size: 14px;
+  color: #909399;
+}
+
+.batch-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .upload-progress {
