@@ -23,6 +23,15 @@
                     selectedDocs.length
                   }})
                 </el-button>
+                <el-button
+                  type="danger"
+                  size="small"
+                  @click="confirmBatchDelete"
+                >
+                  <el-icon><Delete /></el-icon> 批量删除 ({{
+                    selectedDocs.length
+                  }})
+                </el-button>
               </div>
               <el-table
                 :data="docsData.documents"
@@ -63,6 +72,14 @@
                       @click="downloadDocument(row)"
                     >
                       <el-icon><Download /></el-icon> 下载
+                    </el-button>
+                    <el-button
+                      type="danger"
+                      link
+                      size="small"
+                      @click="confirmDelete(row)"
+                    >
+                      <el-icon><Delete /></el-icon> 删除
                     </el-button>
                   </template>
                 </el-table-column>
@@ -179,6 +196,38 @@
       ref="uploadDialogRef"
       @upload-complete="handleUploadComplete"
     />
+
+    <!-- 删除确认弹框 -->
+    <el-dialog
+      v-model="deleteDialogVisible"
+      :title="batchDeleteMode ? '批量删除文档' : '删除文档'"
+      width="400px"
+    >
+      <div class="delete-confirm-content">
+        <el-icon class="warning-icon"><Warning /></el-icon>
+        <div v-if="batchDeleteMode">
+          <p>
+            确定要删除选中的
+            <strong>{{ selectedDocs.length }}</strong> 个文档吗？
+          </p>
+          <p class="warning-text">此操作不可恢复，请谨慎操作！</p>
+        </div>
+        <div v-else-if="currentDocument">
+          <p>
+            确定要删除文档 <strong>{{ currentDocument.name }}</strong> 吗？
+          </p>
+          <p class="warning-text">此操作不可恢复，请谨慎操作！</p>
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="deleteDialogVisible = false">取消</el-button>
+          <el-button type="danger" :loading="isDeleting" @click="handleDelete">
+            确认删除
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -189,7 +238,9 @@ import {
   View,
   Download,
   ChatLineRound,
-  Plus
+  Plus,
+  Delete,
+  Warning
 } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import DocumentViewDialog from "./DocumentViewDialog.vue";
@@ -291,6 +342,58 @@ function handleUploadComplete(document) {
     uploader: document.uploader,
     uploadTime: document.uploadTime
   });
+}
+
+// 删除相关状态
+const deleteDialogVisible = ref(false);
+const batchDeleteMode = ref(false);
+const currentDocument = ref(null);
+const isDeleting = ref(false);
+
+// 确认删除单个文档
+function confirmDelete(document) {
+  currentDocument.value = document;
+  batchDeleteMode.value = false;
+  deleteDialogVisible.value = true;
+}
+
+// 确认批量删除
+function confirmBatchDelete() {
+  if (selectedDocs.value.length === 0) {
+    ElMessage.warning("请选择要删除的文档");
+    return;
+  }
+  batchDeleteMode.value = true;
+  deleteDialogVisible.value = true;
+}
+
+// 执行删除操作
+function handleDelete() {
+  isDeleting.value = true;
+
+  // 模拟删除操作
+  setTimeout(() => {
+    if (batchDeleteMode.value) {
+      // 批量删除
+      const selectedIds = selectedDocs.value.map(doc => doc.name);
+      docsData.value.documents = docsData.value.documents.filter(
+        doc => !selectedIds.includes(doc.name)
+      );
+      ElMessage.success(`成功删除 ${selectedDocs.value.length} 个文档`);
+      selectedDocs.value = [];
+    } else if (currentDocument.value) {
+      // 删除单个文档
+      docsData.value.documents = docsData.value.documents.filter(
+        doc => doc.name !== currentDocument.value.name
+      );
+      ElMessage.success(`文档 ${currentDocument.value.name} 删除成功`);
+    }
+
+    // 重置状态
+    isDeleting.value = false;
+    deleteDialogVisible.value = false;
+    currentDocument.value = null;
+  }, 1000);
 }
 
 // 模拟文档数据，实际应通过API获取
