@@ -17,7 +17,20 @@
           <!-- 文档库 -->
           <el-tab-pane label="文档库" name="documents">
             <div class="document-list">
-              <el-table :data="docsData.documents" style="width: 100%" border>
+              <div v-if="selectedDocs.length > 0" class="table-actions">
+                <el-button type="primary" size="small" @click="batchDownload">
+                  <el-icon><Download /></el-icon> 批量下载 ({{
+                    selectedDocs.length
+                  }})
+                </el-button>
+              </div>
+              <el-table
+                :data="docsData.documents"
+                style="width: 100%"
+                border
+                @selection-change="handleSelectionChange"
+              >
+                <el-table-column type="selection" width="55" />
                 <el-table-column prop="name" label="文档名称" min-width="180" />
                 <el-table-column prop="type" label="类型" width="100">
                   <template #default="{ row }">
@@ -47,7 +60,7 @@
                       type="success"
                       link
                       size="small"
-                      @click="openDownloadDialog(row)"
+                      @click="downloadDocument(row)"
                     >
                       <el-icon><Download /></el-icon> 下载
                     </el-button>
@@ -180,7 +193,6 @@ import {
 } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import DocumentViewDialog from "./DocumentViewDialog.vue";
-import DocumentDownloadDialog from "./DocumentDownloadDialog.vue";
 import DocumentUploadDialog from "./DocumentUploadDialog.vue";
 
 const props = defineProps({
@@ -206,14 +218,50 @@ const viewDialogRef = ref();
 const downloadDialogRef = ref();
 const uploadDialogRef = ref();
 
+// 选中的文档
+const selectedDocs = ref([]);
+
+// 处理选中文档变化
+function handleSelectionChange(selection) {
+  selectedDocs.value = selection;
+}
+
 // 打开文档查看弹窗
 function openViewDialog(document) {
   viewDialogRef.value?.open(document);
 }
 
-// 打开文档下载弹窗
-function openDownloadDialog(document) {
-  downloadDialogRef.value?.open(document);
+// 直接下载文档
+function downloadDocument(document) {
+  // 模拟直接下载文件
+  ElMessage.success(`开始下载文档: ${document.name}`);
+
+  // 实际应用中应该调用下载 API
+  // 这里模拟下载完成通知
+  setTimeout(() => {
+    handleDownloadComplete({
+      document: document
+    });
+  }, 1000);
+}
+
+// 批量下载文档
+function batchDownload() {
+  if (selectedDocs.value.length === 0) {
+    ElMessage.warning("请选择要下载的文档");
+    return;
+  }
+
+  // 模拟打包下载
+  ElMessage.success(
+    `正在将 ${selectedDocs.value.length} 个文档打包成ZIP下载...`
+  );
+
+  // 实际应用中应该调用打包下载 API
+  // 这里模拟下载完成通知
+  setTimeout(() => {
+    ElMessage.success(`${selectedDocs.value.length} 个文档打包下载完成`);
+  }, 2000);
 }
 
 // 打开文档上传弹窗
@@ -369,6 +417,12 @@ const docsData = ref({
   margin-bottom: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
+}
+
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
 }
 
 .card-header {
