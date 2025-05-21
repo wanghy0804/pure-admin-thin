@@ -5,7 +5,7 @@
         <div class="card-header">
           <span class="font-medium">文档与沟通</span>
           <div class="header-actions">
-            <el-button type="primary" size="small">
+            <el-button type="primary" size="small" @click="openUploadDialog">
               <el-icon><Upload /></el-icon> 上传文档
             </el-button>
           </div>
@@ -34,11 +34,21 @@
                   width="160"
                 />
                 <el-table-column label="操作" width="180">
-                  <template #default>
-                    <el-button type="primary" link size="small">
+                  <template #default="{ row }">
+                    <el-button
+                      type="primary"
+                      link
+                      size="small"
+                      @click="openViewDialog(row)"
+                    >
                       <el-icon><View /></el-icon> 查看
                     </el-button>
-                    <el-button type="success" link size="small">
+                    <el-button
+                      type="success"
+                      link
+                      size="small"
+                      @click="openDownloadDialog(row)"
+                    >
                       <el-icon><Download /></el-icon> 下载
                     </el-button>
                   </template>
@@ -138,6 +148,24 @@
         <el-empty description="请选择项目" />
       </div>
     </el-card>
+
+    <!-- 文档查看弹窗 -->
+    <DocumentViewDialog
+      ref="viewDialogRef"
+      @download="handleDocumentDownload"
+    />
+
+    <!-- 文档下载弹窗 -->
+    <DocumentDownloadDialog
+      ref="downloadDialogRef"
+      @download-complete="handleDownloadComplete"
+    />
+
+    <!-- 文档上传弹窗 -->
+    <DocumentUploadDialog
+      ref="uploadDialogRef"
+      @upload-complete="handleUploadComplete"
+    />
   </div>
 </template>
 
@@ -150,6 +178,10 @@ import {
   ChatLineRound,
   Plus
 } from "@element-plus/icons-vue";
+import { ElMessage } from "element-plus";
+import DocumentViewDialog from "./DocumentViewDialog.vue";
+import DocumentDownloadDialog from "./DocumentDownloadDialog.vue";
+import DocumentUploadDialog from "./DocumentUploadDialog.vue";
 
 const props = defineProps({
   project: Object
@@ -167,6 +199,50 @@ function getDocTypeTag(type) {
     Image: "info"
   };
   return typeMap[type] || "";
+}
+
+// 弹窗引用
+const viewDialogRef = ref();
+const downloadDialogRef = ref();
+const uploadDialogRef = ref();
+
+// 打开文档查看弹窗
+function openViewDialog(document) {
+  viewDialogRef.value?.open(document);
+}
+
+// 打开文档下载弹窗
+function openDownloadDialog(document) {
+  downloadDialogRef.value?.open(document);
+}
+
+// 打开文档上传弹窗
+function openUploadDialog() {
+  uploadDialogRef.value?.open();
+}
+
+// 处理文档下载事件（从查看弹窗触发）
+function handleDocumentDownload(document) {
+  openDownloadDialog(document);
+}
+
+// 处理下载完成事件
+function handleDownloadComplete(options) {
+  ElMessage.success(`文档 ${options.document.name} 下载完成`);
+  // 实际应用中可能需要记录下载历史或执行其他操作
+}
+
+// 处理上传完成事件
+function handleUploadComplete(document) {
+  ElMessage.success(`文档 ${document.name} 上传成功`);
+  // 添加到文档列表
+  docsData.value.documents.unshift({
+    name: document.name,
+    type: document.type,
+    size: document.size,
+    uploader: document.uploader,
+    uploadTime: document.uploadTime
+  });
 }
 
 // 模拟文档数据，实际应通过API获取

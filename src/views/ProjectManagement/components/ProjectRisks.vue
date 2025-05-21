@@ -189,11 +189,8 @@
                     <div class="change-content">
                       <p>{{ change.description }}</p>
                       <div class="change-meta">
-                        <span class="change-requester"
-                          >申请人: {{ change.requester }}</span
-                        >
                         <span class="change-approver"
-                          >审批人: {{ change.approver }}</span
+                          >变更人: {{ change.approver }}</span
                         >
                       </div>
                     </div>
@@ -483,25 +480,10 @@
 
 <script setup lang="ts">
 import { cloneDeep } from "lodash-es";
-import { defineProps, ref, reactive } from "vue";
+import { defineProps, ref } from "vue";
 import { Plus } from "@element-plus/icons-vue";
 import ProjectAddIssueDialog from "./ProjectAddIssueDialog.vue";
 import ProjectAddRiskDialog from "./ProjectAddRiskDialog.vue";
-
-// 添加问题弹窗
-const addIssueDialogRef = ref();
-const openAddIssueDialog = () => {
-  addIssueDialogRef.value?.open();
-};
-function handleAddIssueSubmit(issue) {
-  // 添加到 riskData.issues
-  const newId = `I${String(riskData.value.issues.length + 1).padStart(3, "0")}`;
-  riskData.value.issues.push({
-    ...issue,
-    id: newId,
-    createdAt: new Date().toISOString().slice(0, 10)
-  });
-}
 import type { FormInstance, FormRules } from "element-plus";
 
 const props = defineProps({
@@ -509,158 +491,8 @@ const props = defineProps({
 });
 
 const activeTab = ref("risks");
-const addRiskDialogRef = ref();
 
-// 弹窗控制变量和当前风险数据
-const riskDetailDialogVisible = ref(false);
-const riskEditDialogVisible = ref(false);
-const issueSolutionDialogVisible = ref(false);
-const currentRisk = ref<any>(null);
-
-// 打开详情弹窗（风险/问题通用）
-const detailType = ref("risk");
-function openRiskDetail(row: any) {
-  currentRisk.value = cloneDeep(row);
-  detailType.value = "risk";
-  riskDetailDialogVisible.value = true;
-}
-function openIssueDetail(row: any) {
-  currentRisk.value = cloneDeep(row);
-  detailType.value = "issue";
-  riskDetailDialogVisible.value = true;
-  issueDetailReadonly.value = true;
-}
-function openIssueEdit(row: any) {
-  currentRisk.value = cloneDeep(row);
-  riskEditDialogVisible.value = true;
-  issueDetailReadonly.value = false;
-}
-
-// 打开问题解决弹窗
-function openIssueSolution(row: any) {
-  currentRisk.value = cloneDeep(row);
-  issueSolutionDialogVisible.value = true;
-  detailType.value = "issue";
-}
-const issueDetailReadonly = ref(false);
-// 打开编辑弹窗
-function openRiskEdit(row: any) {
-  currentRisk.value = cloneDeep(row);
-  riskEditDialogVisible.value = true;
-}
-// 保存编辑
-function saveRiskEdit() {
-  if (!currentRisk.value) return;
-  if (detailType.value === "risk") {
-    // 查找并更新riskData.risks里对应项
-    const idx = riskData.value.risks.findIndex(
-      r => r.id === currentRisk.value.id
-    );
-    if (idx !== -1) {
-      riskData.value.risks[idx] = cloneDeep(currentRisk.value);
-    }
-  } else if (detailType.value === "issue") {
-    // 查找并更新riskData.issues里对应项
-    const idx = riskData.value.issues.findIndex(
-      i => i.id === currentRisk.value.id
-    );
-    if (idx !== -1) {
-      riskData.value.issues[idx] = cloneDeep(currentRisk.value);
-    }
-  }
-  riskEditDialogVisible.value = false;
-}
-
-// 保存问题解决
-function saveIssueSolution() {
-  if (!currentRisk.value) return;
-  // 查找并更新riskData.issues里对应项
-  const idx = riskData.value.issues.findIndex(
-    i => i.id === currentRisk.value.id
-  );
-  if (idx !== -1) {
-    riskData.value.issues[idx] = cloneDeep(currentRisk.value);
-  }
-  issueSolutionDialogVisible.value = false;
-}
-
-// 添加风险弹窗
-const openAddRiskDialog = () => {
-  addRiskDialogRef.value?.open();
-};
-
-function handleAddRiskSubmit(risk) {
-  // 添加到 riskData.risks
-  const newId = `R${String(riskData.value.risks.length + 1).padStart(3, "0")}`;
-  riskData.value.risks.push({ ...risk, id: newId });
-}
-
-// 风险级别标签类型
-function getRiskLevelType(level) {
-  const levelMap = {
-    高: "danger",
-    中: "warning",
-    低: "info"
-  };
-  return levelMap[level] || "";
-}
-
-// 风险状态标签类型
-function getRiskStatusType(status) {
-  const statusMap = {
-    未处理: "danger",
-    处理中: "warning",
-    已缓解: "success",
-    已关闭: "info"
-  };
-  return statusMap[status] || "";
-}
-
-// 问题类型标签类型
-function getIssueTypeType(type) {
-  const typeMap = {
-    功能问题: "danger",
-    性能问题: "warning",
-    安全问题: "info",
-    兼容性问题: "primary"
-  };
-  return typeMap[type] || "";
-}
-
-// 问题优先级标签类型
-function getIssuePriorityType(priority) {
-  const priorityMap = {
-    紧急: "danger",
-    高: "warning",
-    中: "info",
-    低: "success"
-  };
-  return priorityMap[priority] || "";
-}
-
-// 问题状态标签类型
-function getIssueStatusType(status) {
-  const statusMap = {
-    未解决: "danger",
-    处理中: "warning",
-    已解决: "success",
-    已关闭: "info"
-  };
-  return statusMap[status] || "";
-}
-
-// 变更类型标签类型
-function getChangeType(type) {
-  const typeMap = {
-    范围变更: "danger",
-    时间变更: "warning",
-    资源变更: "info",
-    技术变更: "primary"
-  };
-  return typeMap[type] || "";
-}
-
-// 模拟风险数据，实际应通过API获取
+// 风险与问题数据
 const riskData = ref({
   risks: [
     {
@@ -752,7 +584,6 @@ const riskData = ref({
       title: "增加新功能模块",
       type: "范围变更",
       description: "应客户要求，增加数据分析报表模块，预计将增加项目工期15天。",
-      requester: "张三",
       approver: "王总"
     },
     {
@@ -761,7 +592,6 @@ const riskData = ref({
       type: "时间变更",
       description:
         "由于前期需求变更和技术难点突破耗时较长，项目交付日期延期一个月。",
-      requester: "李四",
       approver: "王总"
     },
     {
@@ -770,11 +600,169 @@ const riskData = ref({
       type: "技术变更",
       description:
         "由原计划的MySQL数据库更换为PostgreSQL，以支持更复杂的数据分析需求。",
-      requester: "赵六",
       approver: "李四"
     }
   ]
 });
+
+// 添加问题弹窗
+const addIssueDialogRef = ref();
+const openAddIssueDialog = () => {
+  addIssueDialogRef.value?.open();
+};
+function handleAddIssueSubmit(issue) {
+  // 添加到 riskData.issues
+  const newId = `I${String(riskData.value.issues.length + 1).padStart(3, "0")}`;
+  riskData.value.issues.push({
+    ...issue,
+    id: newId,
+    createdAt: new Date().toISOString().slice(0, 10)
+  });
+}
+// 弹窗引用和控制变量
+const addRiskDialogRef = ref();
+const riskDetailDialogVisible = ref(false);
+const riskEditDialogVisible = ref(false);
+const issueSolutionDialogVisible = ref(false);
+const currentRisk = ref<any>(null);
+
+// 打开详情弹窗（风险/问题通用）
+const detailType = ref("risk");
+function openRiskDetail(row: any) {
+  currentRisk.value = cloneDeep(row);
+  detailType.value = "risk";
+  riskDetailDialogVisible.value = true;
+}
+function openIssueDetail(row: any) {
+  currentRisk.value = cloneDeep(row);
+  detailType.value = "issue";
+  riskDetailDialogVisible.value = true;
+  issueDetailReadonly.value = true;
+}
+function openIssueEdit(row: any) {
+  currentRisk.value = cloneDeep(row);
+  riskEditDialogVisible.value = true;
+  issueDetailReadonly.value = false;
+}
+
+// 打开问题解决弹窗
+function openIssueSolution(row: any) {
+  currentRisk.value = cloneDeep(row);
+  issueSolutionDialogVisible.value = true;
+  detailType.value = "issue";
+}
+const issueDetailReadonly = ref(false);
+// 打开编辑弹窗
+function openRiskEdit(row: any) {
+  currentRisk.value = cloneDeep(row);
+  riskEditDialogVisible.value = true;
+}
+// 保存编辑
+function saveRiskEdit() {
+  if (!currentRisk.value) return;
+  if (detailType.value === "risk") {
+    // 查找并更新riskData.risks里对应项
+    const idx = riskData.value.risks.findIndex(
+      r => r.id === currentRisk.value.id
+    );
+    if (idx !== -1) {
+      riskData.value.risks[idx] = cloneDeep(currentRisk.value);
+    }
+  } else if (detailType.value === "issue") {
+    // 查找并更新riskData.issues里对应项
+    const idx = riskData.value.issues.findIndex(
+      i => i.id === currentRisk.value.id
+    );
+    if (idx !== -1) {
+      riskData.value.issues[idx] = cloneDeep(currentRisk.value);
+    }
+  }
+  riskEditDialogVisible.value = false;
+}
+
+// 保存问题解决
+function saveIssueSolution() {
+  if (!currentRisk.value) return;
+  // 查找并更新riskData.issues里对应项
+  const idx = riskData.value.issues.findIndex(
+    i => i.id === currentRisk.value.id
+  );
+  if (idx !== -1) {
+    riskData.value.issues[idx] = cloneDeep(currentRisk.value);
+  }
+  issueSolutionDialogVisible.value = false;
+}
+
+// 添加风险弹窗
+const openAddRiskDialog = () => {
+  addRiskDialogRef.value?.open();
+};
+
+function handleAddRiskSubmit(risk) {
+  // 添加到 riskData.risks
+  const newId = `R${String(riskData.value.risks.length + 1).padStart(3, "0")}`;
+  riskData.value.risks.push({ ...risk, id: newId });
+}
+
+// 标签类型函数
+function getRiskLevelType(level) {
+  const levelMap = {
+    高: "danger",
+    中: "warning",
+    低: "info"
+  };
+  return levelMap[level] || "";
+}
+
+function getRiskStatusType(status) {
+  const statusMap = {
+    未处理: "danger",
+    处理中: "warning",
+    已缓解: "success",
+    已关闭: "info"
+  };
+  return statusMap[status] || "";
+}
+
+function getIssueTypeType(type) {
+  const typeMap = {
+    功能问题: "danger",
+    性能问题: "warning",
+    安全问题: "info",
+    兼容性问题: "primary"
+  };
+  return typeMap[type] || "";
+}
+
+function getIssuePriorityType(priority) {
+  const priorityMap = {
+    紧急: "danger",
+    高: "warning",
+    中: "info",
+    低: "success"
+  };
+  return priorityMap[priority] || "";
+}
+
+function getIssueStatusType(status) {
+  const statusMap = {
+    未解决: "danger",
+    处理中: "warning",
+    已解决: "success",
+    已关闭: "info"
+  };
+  return statusMap[status] || "";
+}
+
+function getChangeType(type) {
+  const typeMap = {
+    范围变更: "danger",
+    时间变更: "warning",
+    资源变更: "info",
+    技术变更: "primary"
+  };
+  return typeMap[type] || "";
+}
 </script>
 
 <style scoped>
