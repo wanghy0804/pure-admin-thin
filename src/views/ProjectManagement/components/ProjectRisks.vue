@@ -26,7 +26,7 @@
       </template>
 
       <div v-if="project" class="risks-content">
-        <el-tabs v-model="activeTab" class="risk-tabs centered-tabs">
+        <el-tabs v-model="activeTab" class="risk-tabs centered-tabs" stretch>
           <!-- 风险清单 -->
           <el-tab-pane label="风险清单" name="risks">
             <div class="risk-list">
@@ -157,7 +157,7 @@
                       type="success"
                       link
                       size="small"
-                      @click="openIssueEdit(row)"
+                      @click="openIssueSolution(row)"
                     >
                       解决
                     </el-button>
@@ -478,6 +478,66 @@
         <el-button type="primary" @click="saveRiskEdit">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- 问题解决弹窗 -->
+    <el-dialog
+      v-model="issueSolutionDialogVisible"
+      title="问题解决"
+      width="600px"
+      :before-close="
+        () => {
+          issueSolutionDialogVisible = false;
+        }
+      "
+    >
+      <el-form v-if="currentRisk" label-width="100px">
+        <el-form-item label="问题ID">
+          <el-input v-model="currentRisk.id" disabled />
+        </el-form-item>
+        <el-form-item label="问题描述">
+          <el-input v-model="currentRisk.title" />
+        </el-form-item>
+        <el-form-item label="问题类型">
+          <el-select v-model="currentRisk.type" style="width: 100%">
+            <el-option label="功能问题" value="功能问题" />
+            <el-option label="性能问题" value="性能问题" />
+            <el-option label="安全问题" value="安全问题" />
+            <el-option label="兼容性问题" value="兼容性问题" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="优先级">
+          <el-select v-model="currentRisk.priority" style="width: 100%">
+            <el-option label="紧急" value="紧急" />
+            <el-option label="高" value="高" />
+            <el-option label="中" value="中" />
+            <el-option label="低" value="低" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="解决方案">
+          <el-input
+            v-model="currentRisk.solution"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入问题解决方案"
+          />
+        </el-form-item>
+        <el-form-item label="负责人">
+          <el-input v-model="currentRisk.assignee" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="currentRisk.status" style="width: 100%">
+            <el-option label="未解决" value="未解决" />
+            <el-option label="处理中" value="处理中" />
+            <el-option label="已解决" value="已解决" />
+            <el-option label="已关闭" value="已关闭" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="issueSolutionDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveIssueSolution">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -514,6 +574,7 @@ const riskFormRef = ref<FormInstance>();
 // 弹窗控制变量和当前风险数据
 const riskDetailDialogVisible = ref(false);
 const riskEditDialogVisible = ref(false);
+const issueSolutionDialogVisible = ref(false);
 const currentRisk = ref<any>(null);
 
 // 打开详情弹窗（风险/问题通用）
@@ -534,6 +595,13 @@ function openIssueEdit(row: any) {
   riskEditDialogVisible.value = true;
   issueDetailReadonly.value = false;
 }
+
+// 打开问题解决弹窗
+function openIssueSolution(row: any) {
+  currentRisk.value = cloneDeep(row);
+  issueSolutionDialogVisible.value = true;
+  detailType.value = "issue";
+}
 const issueDetailReadonly = ref(false);
 // 打开编辑弹窗
 function openRiskEdit(row: any) {
@@ -543,14 +611,37 @@ function openRiskEdit(row: any) {
 // 保存编辑
 function saveRiskEdit() {
   if (!currentRisk.value) return;
-  // 查找并更新riskData.risks里对应项
-  const idx = riskData.value.risks.findIndex(
-    r => r.id === currentRisk.value.id
-  );
-  if (idx !== -1) {
-    riskData.value.risks[idx] = cloneDeep(currentRisk.value);
+  if (detailType.value === "risk") {
+    // 查找并更新riskData.risks里对应项
+    const idx = riskData.value.risks.findIndex(
+      r => r.id === currentRisk.value.id
+    );
+    if (idx !== -1) {
+      riskData.value.risks[idx] = cloneDeep(currentRisk.value);
+    }
+  } else if (detailType.value === "issue") {
+    // 查找并更新riskData.issues里对应项
+    const idx = riskData.value.issues.findIndex(
+      i => i.id === currentRisk.value.id
+    );
+    if (idx !== -1) {
+      riskData.value.issues[idx] = cloneDeep(currentRisk.value);
+    }
   }
   riskEditDialogVisible.value = false;
+}
+
+// 保存问题解决
+function saveIssueSolution() {
+  if (!currentRisk.value) return;
+  // 查找并更新riskData.issues里对应项
+  const idx = riskData.value.issues.findIndex(
+    i => i.id === currentRisk.value.id
+  );
+  if (idx !== -1) {
+    riskData.value.issues[idx] = cloneDeep(currentRisk.value);
+  }
+  issueSolutionDialogVisible.value = false;
 }
 
 const initialNewRiskForm = () => ({

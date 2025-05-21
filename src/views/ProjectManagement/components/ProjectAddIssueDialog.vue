@@ -78,6 +78,21 @@ const rules = ref<FormRules>({
 });
 
 function open() {
+  // 重置表单数据为初始状态
+  form.value = {
+    title: "",
+    type: "",
+    priority: "",
+    reporter: "",
+    assignee: "",
+    status: "未解决"
+  };
+
+  // 如果表单实例存在，清除验证
+  if (issueFormRef.value) {
+    issueFormRef.value.clearValidate();
+  }
+
   visible.value = true;
 }
 
