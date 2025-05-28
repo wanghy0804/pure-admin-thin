@@ -76,6 +76,13 @@
                   clearable
                   class="search-input"
                 />
+                <el-input
+                  v-model="projectSearchQuery"
+                  placeholder="搜索项目"
+                  :prefix-icon="Search"
+                  clearable
+                  class="search-input"
+                />
               </div>
             </div>
           </template>
@@ -156,6 +163,7 @@ import { Search, WarningFilled } from "@element-plus/icons-vue";
 
 const router = useRouter();
 const searchQuery = ref("");
+const projectSearchQuery = ref("");
 const statusFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -398,14 +406,22 @@ const taskStats = computed(() => {
 const filteredTasks = computed(() => {
   let result = allTasks.value;
 
-  // 应用搜索筛选
+  // 应用任务搜索筛选
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     result = result.filter(
       task =>
         task.name.toLowerCase().includes(query) ||
-        task.assignee.toLowerCase().includes(query) ||
-        task.projectName.toLowerCase().includes(query)
+        task.assignee.toLowerCase().includes(query)
+    );
+  }
+  // 应用项目搜索筛选
+  if (projectSearchQuery.value) {
+    const query = projectSearchQuery.value.toLowerCase();
+    result = result.filter(
+      task =>
+        task.projectName.toLowerCase().includes(query) ||
+        task.projectId.toLowerCase().includes(query)
     );
   }
 
@@ -552,7 +568,8 @@ function filterByStatus(status) {
 }
 
 .search-input {
-  width: 800px;
+  width: 400px;
+  margin-left: 8px;
 }
 
 .font-medium {
