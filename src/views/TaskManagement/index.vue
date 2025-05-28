@@ -76,27 +76,6 @@
                   clearable
                   class="search-input"
                 />
-                <el-select
-                  v-model="projectFilter"
-                  placeholder="搜索项目"
-                  clearable
-                  filterable
-                  remote
-                  :remote-method="searchProjects"
-                  :loading="projectSearchLoading"
-                  :filter-method="filterProjects"
-                  :reserve-keyword="false"
-                >
-                  <template #prefix>
-                    <el-icon class="select-prefix-icon"><Search /></el-icon>
-                  </template>
-                  <el-option
-                    v-for="project in filteredProjects"
-                    :key="project.id"
-                    :label="project.name"
-                    :value="project.id"
-                  />
-                </el-select>
               </div>
             </div>
           </template>
@@ -178,21 +157,9 @@ import { Search, WarningFilled } from "@element-plus/icons-vue";
 const router = useRouter();
 const searchQuery = ref("");
 const statusFilter = ref("");
-const projectFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(10);
 const isOverdueFilterActive = ref(false);
-const projectSearchLoading = ref(false);
-const filteredProjects = ref([]);
-
-// 模拟项目数据
-const projects = ref([
-  { id: "PRJ001", name: "企业网站重构" },
-  { id: "PRJ002", name: "移动应用开发" },
-  { id: "PRJ003", name: "数据中心升级" },
-  { id: "PRJ004", name: "CRM系统实施" },
-  { id: "PRJ005", name: "安全审计系统" }
-]);
 
 // 模拟任务数据
 const allTasks = ref([
@@ -457,11 +424,6 @@ const filteredTasks = computed(() => {
     result = result.filter(task => task.status === statusFilter.value);
   }
 
-  // 应用项目筛选
-  if (projectFilter.value) {
-    result = result.filter(task => task.projectId === projectFilter.value);
-  }
-
   return result;
 });
 
@@ -520,36 +482,6 @@ function filterByStatus(status) {
     statusFilter.value = status;
     isOverdueFilterActive.value = false;
   }
-}
-
-// 搜索项目
-function searchProjects(query) {
-  if (!query || query.length < 2) {
-    filteredProjects.value = [];
-    return;
-  }
-
-  projectSearchLoading.value = true;
-
-  // 模拟异步搜索
-  setTimeout(() => {
-    const results = projects.value.filter(project =>
-      project.name.toLowerCase().includes(query.toLowerCase())
-    );
-    filteredProjects.value = results;
-    projectSearchLoading.value = false;
-
-    // 调试信息
-    console.log("Search query:", query);
-    console.log("Filtered projects:", results);
-  }, 200);
-}
-
-// 项目筛选方法
-function filterProjects(query) {
-  // 这个方法不会被调用，因为我们使用了remote属性
-  // 但仍需要提供这个方法来避免控制台警告
-  return query.length >= 2;
 }
 </script>
 
