@@ -77,23 +77,21 @@
                   class="search-input"
                 />
                 <el-select
-                  v-model="statusFilter"
-                  placeholder="状态筛选"
-                  clearable
-                >
-                  <el-option label="全部" value="" />
-                  <el-option label="未开始" value="未开始" />
-                  <el-option label="进行中" value="进行中" />
-                  <el-option label="已完成" value="已完成" />
-                </el-select>
-                <el-select
                   v-model="projectFilter"
-                  placeholder="项目筛选"
+                  placeholder="搜索项目"
                   clearable
+                  filterable
+                  remote
+                  :remote-method="searchProjects"
+                  :loading="projectSearchLoading"
+                  :filter-method="filterProjects"
+                  :reserve-keyword="false"
                 >
-                  <el-option label="全部" value="" />
+                  <template #prefix>
+                    <el-icon class="select-prefix-icon"><Search /></el-icon>
+                  </template>
                   <el-option
-                    v-for="project in projects"
+                    v-for="project in filteredProjects"
                     :key="project.id"
                     :label="project.name"
                     :value="project.id"
@@ -184,6 +182,8 @@ const projectFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(10);
 const isOverdueFilterActive = ref(false);
+const projectSearchLoading = ref(false);
+const filteredProjects = ref([]);
 
 // 模拟项目数据
 const projects = ref([
@@ -521,6 +521,36 @@ function filterByStatus(status) {
     isOverdueFilterActive.value = false;
   }
 }
+
+// 搜索项目
+function searchProjects(query) {
+  if (!query || query.length < 2) {
+    filteredProjects.value = [];
+    return;
+  }
+
+  projectSearchLoading.value = true;
+
+  // 模拟异步搜索
+  setTimeout(() => {
+    const results = projects.value.filter(project =>
+      project.name.toLowerCase().includes(query.toLowerCase())
+    );
+    filteredProjects.value = results;
+    projectSearchLoading.value = false;
+
+    // 调试信息
+    console.log("Search query:", query);
+    console.log("Filtered projects:", results);
+  }, 200);
+}
+
+// 项目筛选方法
+function filterProjects(query) {
+  // 这个方法不会被调用，因为我们使用了remote属性
+  // 但仍需要提供这个方法来避免控制台警告
+  return query.length >= 2;
+}
 </script>
 
 <style scoped>
@@ -590,7 +620,7 @@ function filterByStatus(status) {
 }
 
 .search-input {
-  width: 600px;
+  width: 800px;
 }
 
 .font-medium {
@@ -614,5 +644,11 @@ function filterByStatus(status) {
 .overdue-date {
   font-weight: bold;
   color: #f56c6c;
+}
+
+.select-prefix-icon {
+  margin-right: 6px;
+  margin-left: 8px;
+  color: #909399;
 }
 </style>
