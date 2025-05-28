@@ -29,6 +29,17 @@
         <el-tabs v-model="activeTab" class="risk-tabs centered-tabs" stretch>
           <!-- 风险清单 -->
           <el-tab-pane label="风险清单" name="risks">
+            <el-alert
+              type="info"
+              show-icon
+              :closable="false"
+              class="risk-alert"
+            >
+              <template #title>
+                <strong>风险清单说明：</strong
+                >风险是指<strong>可能发生</strong>的、会对项目产生负面影响的不确定事件。风险管理的目的是提前识别并采取措施以降低风险发生的概率或减轻其影响。
+              </template>
+            </el-alert>
             <div class="risk-list">
               <el-table :data="riskData.risks" style="width: 100%" border>
                 <el-table-column prop="id" label="ID" width="80" />
@@ -99,6 +110,17 @@
 
           <!-- 问题记录 -->
           <el-tab-pane label="问题记录" name="issues">
+            <el-alert
+              type="warning"
+              show-icon
+              :closable="false"
+              class="issue-alert"
+            >
+              <template #title>
+                <strong>问题清单说明：</strong
+                >问题是指<strong>已经发生</strong>的、需要解决的具体困难或障碍。问题管理的目的是及时跟踪和解决已经出现的问题，防止其影响项目进度和质量。
+              </template>
+            </el-alert>
             <div class="issue-list">
               <ProjectAddIssueDialog
                 ref="addIssueDialogRef"
@@ -798,6 +820,11 @@ function getChangeType(type) {
 }
 
 .risk-tabs {
+  margin-bottom: 16px;
+}
+
+.risk-alert,
+.issue-alert {
   margin-bottom: 16px;
 }
 
