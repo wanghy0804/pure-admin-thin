@@ -5,24 +5,55 @@
       <el-col :span="24">
         <el-card class="stats-card">
           <div class="stats-container">
-            <div class="stat-item">
-              <div class="stat-value">{{ taskStats.total }}</div>
+            <div
+              class="stat-item"
+              :class="{
+                'active-stat': statusFilter === '' && !isOverdueFilterActive
+              }"
+              @click="filterByStatus('all')"
+            >
+              <div class="stat-value clickable">{{ taskStats.total }}</div>
               <div class="stat-label">总任务数</div>
             </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ taskStats.notStarted }}</div>
+            <div
+              class="stat-item"
+              :class="{
+                'active-stat':
+                  statusFilter === '未开始' && !isOverdueFilterActive
+              }"
+              @click="filterByStatus('未开始')"
+            >
+              <div class="stat-value clickable">{{ taskStats.notStarted }}</div>
               <div class="stat-label">未开始</div>
             </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ taskStats.inProgress }}</div>
+            <div
+              class="stat-item"
+              :class="{
+                'active-stat':
+                  statusFilter === '进行中' && !isOverdueFilterActive
+              }"
+              @click="filterByStatus('进行中')"
+            >
+              <div class="stat-value clickable">{{ taskStats.inProgress }}</div>
               <div class="stat-label">进行中</div>
             </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ taskStats.completed }}</div>
+            <div
+              class="stat-item"
+              :class="{
+                'active-stat':
+                  statusFilter === '已完成' && !isOverdueFilterActive
+              }"
+              @click="filterByStatus('已完成')"
+            >
+              <div class="stat-value clickable">{{ taskStats.completed }}</div>
               <div class="stat-label">已完成</div>
             </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ taskStats.overdue }}</div>
+            <div
+              class="stat-item"
+              :class="{ 'active-stat': isOverdueFilterActive }"
+              @click="filterByStatus('overdue')"
+            >
+              <div class="stat-value clickable">{{ taskStats.overdue }}</div>
               <div class="stat-label">已逾期</div>
             </div>
           </div>
@@ -41,7 +72,7 @@
                 <el-input
                   v-model="searchQuery"
                   placeholder="搜索任务"
-                  prefix-icon="Search"
+                  :prefix-icon="Search"
                   clearable
                   class="search-input"
                 />
@@ -152,6 +183,7 @@ const statusFilter = ref("");
 const projectFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(10);
+const isOverdueFilterActive = ref(false);
 
 // 模拟项目数据
 const projects = ref([
@@ -410,8 +442,18 @@ const filteredTasks = computed(() => {
     );
   }
 
+  // 应用逾期筛选
+  if (isOverdueFilterActive.value) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    result = result.filter(task => {
+      if (task.status === "已完成") return false;
+      const dueDate = new Date(task.dueDate);
+      return dueDate < today;
+    });
+  }
   // 应用状态筛选
-  if (statusFilter.value) {
+  else if (statusFilter.value) {
     result = result.filter(task => task.status === statusFilter.value);
   }
 
@@ -462,6 +504,23 @@ function isOverdue(dateString) {
 function viewProjectDetail(projectId) {
   router.push(`/ProjectManagement/detail/${projectId}`);
 }
+
+// 根据状态筛选任务
+function filterByStatus(status) {
+  // 重置到第一页
+  currentPage.value = 1;
+
+  if (status === "all") {
+    statusFilter.value = "";
+    isOverdueFilterActive.value = false;
+  } else if (status === "overdue") {
+    statusFilter.value = "";
+    isOverdueFilterActive.value = true;
+  } else {
+    statusFilter.value = status;
+    isOverdueFilterActive.value = false;
+  }
+}
 </script>
 
 <style scoped>
@@ -497,6 +556,23 @@ function viewProjectDetail(projectId) {
   color: #303133;
 }
 
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  color: #409eff;
+}
+
+.active-stat .stat-value {
+  color: #409eff;
+}
+
+.active-stat .stat-label {
+  font-weight: 500;
+  color: #409eff;
+}
+
 .stat-label {
   font-size: 14px;
   color: #606266;
@@ -514,7 +590,7 @@ function viewProjectDetail(projectId) {
 }
 
 .search-input {
-  width: 200px;
+  width: 600px;
 }
 
 .font-medium {
