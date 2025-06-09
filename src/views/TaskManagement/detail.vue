@@ -15,9 +15,18 @@
         <h1 class="page-title">任务详情</h1>
       </div>
       <div class="header-actions">
-        <el-button type="primary" :icon="Edit">编辑任务</el-button>
+        <el-button type="primary" :icon="Edit" @click="openEditDialog"
+          >编辑任务</el-button
+        >
         <el-button type="danger" :icon="Delete">删除任务</el-button>
       </div>
+
+      <EditTaskDialog
+        v-if="taskDetail"
+        v-model:visible="editDialogVisible"
+        :task="editTask"
+        @update="handleEditUpdate"
+      />
     </div>
 
     <el-row v-if="taskDetail" :gutter="20">
@@ -217,11 +226,26 @@ import {
   Clock,
   Timer
 } from "@element-plus/icons-vue";
+import EditTaskDialog from "./components/EditTaskDialog.vue";
 
 const router = useRouter();
 const route = useRoute();
 const taskDetail = ref(null);
 const taskActions = ref([]);
+
+// 编辑弹窗相关
+const editDialogVisible = ref(false);
+const editTask = ref({});
+
+function openEditDialog() {
+  editTask.value = { ...taskDetail.value };
+  editDialogVisible.value = true;
+}
+
+function handleEditUpdate(updatedTask: any) {
+  // 这里只更新当前页面展示的 taskDetail
+  taskDetail.value = { ...taskDetail.value, ...updatedTask };
+}
 
 // 模拟任务数据
 const allTasks = ref([
@@ -536,6 +560,21 @@ function loadTaskDetail() {
 }
 
 onMounted(() => {
+  // 判断路由参数是否有id
+  if (!route.params.id) {
+    // 找到最新的任务（id最大）
+    const latestTask = allTasks.value.reduce(
+      (prev, curr) => (curr.id > prev.id ? curr : prev),
+      allTasks.value[0]
+    );
+    if (latestTask) {
+      router.replace({
+        name: route.name,
+        params: { ...route.params, id: latestTask.id }
+      });
+      return;
+    }
+  }
   loadTaskDetail();
 });
 </script>
