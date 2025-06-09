@@ -126,10 +126,18 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="150">
+            <el-table-column label="操作" width="200">
               <template #default="{ row }">
                 <el-button
                   type="primary"
+                  link
+                  size="small"
+                  @click="viewTaskDetail(row.id)"
+                >
+                  查看详情
+                </el-button>
+                <el-button
+                  type="success"
                   link
                   size="small"
                   @click="viewProjectDetail(row.projectId)"
@@ -476,6 +484,11 @@ function isOverdue(dateString) {
   today.setHours(0, 0, 0, 0);
   const dueDate = new Date(dateString);
   return dueDate < today;
+}
+
+// 跳转到任务详情
+function viewTaskDetail(taskId) {
+  router.push(`/TaskManagement/detail/${taskId}`);
 }
 
 // 跳转到项目详情

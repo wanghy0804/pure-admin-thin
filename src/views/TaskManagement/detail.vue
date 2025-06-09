@@ -1,213 +1,227 @@
 <template>
-  <div class="task-management">
-    <el-row :gutter="16">
-      <!-- 任务统计卡片 -->
-      <el-col :span="24">
-        <el-card class="stats-card">
-          <div class="stats-container">
-            <div class="stat-item">
-              <div class="stat-value">{{ taskStats.total }}</div>
-              <div class="stat-label">总任务数</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ taskStats.notStarted }}</div>
-              <div class="stat-label">未开始</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ taskStats.inProgress }}</div>
-              <div class="stat-label">进行中</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ taskStats.completed }}</div>
-              <div class="stat-label">已完成</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ taskStats.overdue }}</div>
-              <div class="stat-label">已逾期</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+  <div class="task-detail">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <div class="header-left">
+        <el-button
+          type="text"
+          :icon="ArrowLeft"
+          class="back-button"
+          @click="goBack"
+        >
+          返回任务列表
+        </el-button>
+        <el-divider direction="vertical" />
+        <h1 class="page-title">任务详情</h1>
+      </div>
+      <div class="header-actions">
+        <el-button type="primary" :icon="Edit">编辑任务</el-button>
+        <el-button type="danger" :icon="Delete">删除任务</el-button>
+      </div>
+    </div>
 
-    <el-row :gutter="16" class="mt-16">
-      <!-- 任务列表 -->
-      <el-col :span="24">
-        <el-card class="task-list-card">
+    <el-row v-if="taskDetail" :gutter="20">
+      <!-- 基本信息 -->
+      <el-col :span="16">
+        <el-card class="detail-card">
           <template #header>
             <div class="card-header">
-              <span class="font-medium">任务预览</span>
-              <div class="header-actions">
-                <el-input
-                  v-model="searchQuery"
-                  placeholder="搜索任务"
-                  prefix-icon="Search"
-                  clearable
-                  class="search-input"
-                />
-                <el-select
-                  v-model="statusFilter"
-                  placeholder="状态筛选"
-                  clearable
-                >
-                  <el-option label="全部" value="" />
-                  <el-option label="未开始" value="未开始" />
-                  <el-option label="进行中" value="进行中" />
-                  <el-option label="已完成" value="已完成" />
-                </el-select>
-                <el-select
-                  v-model="projectFilter"
-                  placeholder="项目筛选"
-                  clearable
-                >
-                  <el-option label="全部" value="" />
-                  <el-option
-                    v-for="project in projects"
-                    :key="project.id"
-                    :label="project.name"
-                    :value="project.id"
-                  />
-                </el-select>
-              </div>
+              <span class="card-title">基本信息</span>
+              <el-tag :type="getStatusTag(taskDetail.status)" size="large">
+                {{ taskDetail.status }}
+              </el-tag>
             </div>
           </template>
 
-          <el-table :data="filteredTasks" style="width: 100%" border>
-            <el-table-column prop="id" label="ID" width="80" />
-            <el-table-column prop="name" label="任务名称" min-width="180">
-              <template #default="{ row }">
-                <div class="task-name-cell">
-                  <el-icon v-if="row.priority === 'high'">
+          <div class="task-info">
+            <div class="info-row">
+              <div class="info-item">
+                <span class="label">任务名称：</span>
+                <span class="value task-name">
+                  <el-icon v-if="taskDetail.priority === 'high'">
                     <WarningFilled style="color: #f56c6c" />
                   </el-icon>
-                  <span>{{ row.name }}</span>
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column
-              prop="projectName"
-              label="所属项目"
-              min-width="120"
-            />
-            <el-table-column prop="assignee" label="负责人" width="100" />
-            <el-table-column prop="type" label="类型" width="100">
-              <template #default="{ row }">
-                <el-tag :type="getTaskTypeTag(row.type)" size="small">
-                  {{ row.type }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="status" label="状态" width="100">
-              <template #default="{ row }">
-                <el-tag :type="getStatusTag(row.status)" size="small">
-                  {{ row.status }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="dueDate" label="截止日期" width="120">
-              <template #default="{ row }">
-                <div :class="{ 'overdue-date': isOverdue(row.dueDate) }">
-                  {{ row.dueDate }}
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="150">
-              <template #default="{ row }">
-                <el-button
-                  type="primary"
-                  link
-                  size="small"
-                  @click="viewProjectDetail(row.projectId)"
-                >
-                  查看项目
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+                  {{ taskDetail.name }}
+                </span>
+              </div>
+            </div>
 
-          <div class="pagination-container">
-            <el-pagination
-              v-model:current-page="currentPage"
-              v-model:page-size="pageSize"
-              :page-sizes="[10, 20, 50, 100]"
-              background
-              layout="total, sizes, prev, pager, next, jumper"
-              :total="filteredTasks.length"
+            <div class="info-row">
+              <div class="info-item">
+                <span class="label">任务ID：</span>
+                <span class="value">#{{ taskDetail.id }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">任务类型：</span>
+                <el-tag :type="getTaskTypeTag(taskDetail.type)">
+                  {{ taskDetail.type }}
+                </el-tag>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <div class="info-item">
+                <span class="label">所属项目：</span>
+                <el-link
+                  type="primary"
+                  @click="viewProjectDetail(taskDetail.projectId)"
+                >
+                  {{ taskDetail.projectName }}
+                </el-link>
+              </div>
+              <div class="info-item">
+                <span class="label">优先级：</span>
+                <el-tag
+                  :type="taskDetail.priority === 'high' ? 'danger' : 'info'"
+                >
+                  {{ taskDetail.priority === "high" ? "高" : "普通" }}
+                </el-tag>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <div class="info-item">
+                <span class="label">负责人：</span>
+                <div class="assignee-info">
+                  <el-avatar :size="30" class="assignee-avatar">
+                    {{ taskDetail.assignee.charAt(0) }}
+                  </el-avatar>
+                  <span class="assignee-name">{{ taskDetail.assignee }}</span>
+                </div>
+              </div>
+              <div class="info-item">
+                <span class="label">截止日期：</span>
+                <span
+                  class="value"
+                  :class="{ 'overdue-date': isOverdue(taskDetail.dueDate) }"
+                >
+                  {{ taskDetail.dueDate }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </el-card>
+
+        <!-- 任务描述 -->
+        <el-card class="detail-card mt-20">
+          <template #header>
+            <span class="card-title">任务描述</span>
+          </template>
+          <div class="task-description">
+            <p v-if="taskDetail.description">
+              {{ taskDetail.description }}
+            </p>
+            <p v-else class="no-description">暂无任务描述</p>
+          </div>
+        </el-card>
+
+        <!-- 任务进度 -->
+        <el-card class="detail-card mt-20">
+          <template #header>
+            <span class="card-title">任务进度</span>
+          </template>
+          <div class="task-progress">
+            <div class="progress-info">
+              <span>完成进度：{{ taskDetail.progress || 0 }}%</span>
+              <span class="progress-status">{{
+                getProgressStatus(taskDetail.progress || 0)
+              }}</span>
+            </div>
+            <el-progress
+              :percentage="taskDetail.progress || 0"
+              :status="getProgressType(taskDetail.progress || 0)"
+              :stroke-width="8"
             />
+          </div>
+        </el-card>
+      </el-col>
+
+      <!-- 侧边栏信息 -->
+      <el-col :span="8">
+        <!-- 时间信息 -->
+        <el-card class="detail-card">
+          <template #header>
+            <span class="card-title">时间信息</span>
+          </template>
+          <div class="time-info">
+            <div class="time-item">
+              <el-icon><Calendar /></el-icon>
+              <div class="time-content">
+                <div class="time-label">创建时间</div>
+                <div class="time-value">
+                  {{ taskDetail.createTime || "2025-01-15 10:30" }}
+                </div>
+              </div>
+            </div>
+            <div class="time-item">
+              <el-icon><Clock /></el-icon>
+              <div class="time-content">
+                <div class="time-label">更新时间</div>
+                <div class="time-value">
+                  {{ taskDetail.updateTime || "2025-06-07 14:20" }}
+                </div>
+              </div>
+            </div>
+            <div class="time-item">
+              <el-icon><Timer /></el-icon>
+              <div class="time-content">
+                <div class="time-label">截止时间</div>
+                <div
+                  class="time-value"
+                  :class="{ 'overdue-date': isOverdue(taskDetail.dueDate) }"
+                >
+                  {{ taskDetail.dueDate }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-card>
+
+        <!-- 操作记录 -->
+        <el-card class="detail-card mt-20">
+          <template #header>
+            <span class="card-title">操作记录</span>
+          </template>
+          <div class="action-timeline">
+            <el-timeline>
+              <el-timeline-item
+                v-for="(action, index) in taskActions"
+                :key="index"
+                :timestamp="action.timestamp"
+                :type="action.type"
+              >
+                {{ action.description }}
+              </el-timeline-item>
+            </el-timeline>
           </div>
         </el-card>
       </el-col>
     </el-row>
 
-    <el-row :gutter="16" class="mt-16">
-      <!-- 项目任务统计 -->
-      <el-col :span="12">
-        <el-card class="chart-card">
-          <template #header>
-            <div class="card-header">
-              <span class="font-medium">项目任务统计</span>
-            </div>
-          </template>
-          <div ref="projectTaskChartRef" class="chart-container" />
-        </el-card>
-      </el-col>
-
-      <!-- 任务状态分布 -->
-      <el-col :span="12">
-        <el-card class="chart-card">
-          <template #header>
-            <div class="card-header">
-              <span class="font-medium">任务状态分布</span>
-            </div>
-          </template>
-          <div ref="taskStatusChartRef" class="chart-container" />
-        </el-card>
-      </el-col>
-    </el-row>
+    <!-- 加载状态 -->
+    <div v-else class="loading-container">
+      <el-empty description="任务不存在或加载失败" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from "vue";
-import { useRouter } from "vue-router";
-import { Search, WarningFilled } from "@element-plus/icons-vue";
-import * as echarts from "echarts/core";
-import { BarChart, PieChart } from "echarts/charts";
+import { ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import {
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent,
-  GridComponent
-} from "echarts/components";
-import { CanvasRenderer } from "echarts/renderers";
-
-echarts.use([
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent,
-  GridComponent,
-  BarChart,
-  PieChart,
-  CanvasRenderer
-]);
+  ArrowLeft,
+  Edit,
+  Delete,
+  WarningFilled,
+  Calendar,
+  Clock,
+  Timer
+} from "@element-plus/icons-vue";
 
 const router = useRouter();
-const projectTaskChartRef = ref(null);
-const taskStatusChartRef = ref(null);
-const searchQuery = ref("");
-const statusFilter = ref("");
-const projectFilter = ref("");
-const currentPage = ref(1);
-const pageSize = ref(10);
-
-// 模拟项目数据
-const projects = ref([
-  { id: "PRJ001", name: "企业网站重构" },
-  { id: "PRJ002", name: "移动应用开发" },
-  { id: "PRJ003", name: "数据中心升级" },
-  { id: "PRJ004", name: "CRM系统实施" },
-  { id: "PRJ005", name: "安全审计系统" }
-]);
+const route = useRoute();
+const taskDetail = ref(null);
+const taskActions = ref([]);
 
 // 模拟任务数据
 const allTasks = ref([
@@ -411,70 +425,24 @@ const allTasks = ref([
   }
 ]);
 
-// 任务统计数据
-const taskStats = computed(() => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const notStarted = allTasks.value.filter(
-    task => task.status === "未开始"
-  ).length;
-  const inProgress = allTasks.value.filter(
-    task => task.status === "进行中"
-  ).length;
-  const completed = allTasks.value.filter(
-    task => task.status === "已完成"
-  ).length;
-
-  // 计算逾期任务
-  const overdue = allTasks.value.filter(task => {
-    if (task.status === "已完成") return false;
-    const dueDate = new Date(task.dueDate);
-    return dueDate < today;
-  }).length;
-
-  return {
-    total: allTasks.value.length,
-    notStarted,
-    inProgress,
-    completed,
-    overdue
-  };
-});
-
-// 筛选任务
-const filteredTasks = computed(() => {
-  let result = allTasks.value;
-
-  // 应用搜索筛选
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
-    result = result.filter(
-      task =>
-        task.name.toLowerCase().includes(query) ||
-        task.assignee.toLowerCase().includes(query) ||
-        task.projectName.toLowerCase().includes(query)
-    );
+// 模拟操作记录数据
+const mockActions = [
+  {
+    timestamp: "2025-06-07 14:20",
+    type: "primary",
+    description: "任务状态更新为进行中"
+  },
+  {
+    timestamp: "2025-06-05 09:30",
+    type: "info",
+    description: "任务被分配给负责人"
+  },
+  {
+    timestamp: "2025-06-03 16:45",
+    type: "success",
+    description: "任务创建成功"
   }
-
-  // 应用状态筛选
-  if (statusFilter.value) {
-    result = result.filter(task => task.status === statusFilter.value);
-  }
-
-  // 应用项目筛选
-  if (projectFilter.value) {
-    result = result.filter(task => task.projectId === projectFilter.value);
-  }
-
-  return result;
-});
-
-// 分页后的任务
-const paginatedTasks = computed(() => {
-  const startIndex = (currentPage.value - 1) * pageSize.value;
-  return filteredTasks.value.slice(startIndex, startIndex + pageSize.value);
-});
+];
 
 // 获取任务类型标签样式
 function getTaskTypeTag(type) {
@@ -511,226 +479,120 @@ function isOverdue(dateString) {
   return dueDate < today;
 }
 
+// 返回上一页
+function goBack() {
+  router.push("/TaskManagement");
+}
+
 // 跳转到项目详情
 function viewProjectDetail(projectId) {
   router.push(`/ProjectManagement/detail/${projectId}`);
 }
 
-// 初始化项目任务统计图表
-function initProjectTaskChart() {
-  if (!projectTaskChartRef.value) return;
-
-  const chartInstance = echarts.init(projectTaskChartRef.value);
-
-  // 按项目统计任务数量
-  const projectTaskStats = projects.value.map(project => {
-    const projectTasks = allTasks.value.filter(
-      task => task.projectId === project.id
-    );
-    return {
-      name: project.name,
-      total: projectTasks.length,
-      completed: projectTasks.filter(task => task.status === "已完成").length,
-      inProgress: projectTasks.filter(task => task.status === "进行中").length,
-      notStarted: projectTasks.filter(task => task.status === "未开始").length
-    };
-  });
-
-  const option = {
-    tooltip: {
-      trigger: "axis",
-      axisPointer: {
-        type: "shadow"
-      }
-    },
-    legend: {
-      data: ["已完成", "进行中", "未开始"]
-    },
-    grid: {
-      left: "3%",
-      right: "4%",
-      bottom: "3%",
-      containLabel: true
-    },
-    xAxis: {
-      type: "value"
-    },
-    yAxis: {
-      type: "category",
-      data: projectTaskStats.map(item => item.name)
-    },
-    series: [
-      {
-        name: "已完成",
-        type: "bar",
-        stack: "total",
-        label: {
-          show: true
-        },
-        emphasis: {
-          focus: "series"
-        },
-        data: projectTaskStats.map(item => item.completed),
-        itemStyle: {
-          color: "#67C23A"
-        }
-      },
-      {
-        name: "进行中",
-        type: "bar",
-        stack: "total",
-        label: {
-          show: true
-        },
-        emphasis: {
-          focus: "series"
-        },
-        data: projectTaskStats.map(item => item.inProgress),
-        itemStyle: {
-          color: "#409EFF"
-        }
-      },
-      {
-        name: "未开始",
-        type: "bar",
-        stack: "total",
-        label: {
-          show: true
-        },
-        emphasis: {
-          focus: "series"
-        },
-        data: projectTaskStats.map(item => item.notStarted),
-        itemStyle: {
-          color: "#909399"
-        }
-      }
-    ]
-  };
-
-  chartInstance.setOption(option);
-  window.addEventListener("resize", () => {
-    chartInstance.resize();
-  });
+// 获取进度状态文字
+function getProgressStatus(progress) {
+  if (progress === 0) return "未开始";
+  if (progress < 100) return "进行中";
+  return "已完成";
 }
 
-// 初始化任务状态分布图表
-function initTaskStatusChart() {
-  if (!taskStatusChartRef.value) return;
+// 获取进度条类型
+function getProgressType(progress) {
+  if (progress === 0) return "";
+  if (progress < 100) return "";
+  return "success";
+}
 
-  const chartInstance = echarts.init(taskStatusChartRef.value);
+// 加载任务详情
+function loadTaskDetail() {
+  const taskId = parseInt(route.params.id);
+  const task = allTasks.value.find(t => t.id === taskId);
 
-  const option = {
-    tooltip: {
-      trigger: "item",
-      formatter: "{a} <br/>{b}: {c} ({d}%)"
-    },
-    legend: {
-      orient: "vertical",
-      left: 10,
-      data: ["未开始", "进行中", "已完成", "已逾期"]
-    },
-    series: [
-      {
-        name: "任务状态",
-        type: "pie",
-        radius: ["50%", "70%"],
-        avoidLabelOverlap: false,
-        itemStyle: {
-          borderRadius: 10,
-          borderColor: "#fff",
-          borderWidth: 2
-        },
-        label: {
-          show: false,
-          position: "center"
-        },
-        emphasis: {
-          label: {
-            show: true,
-            fontSize: 16,
-            fontWeight: "bold"
-          }
-        },
-        labelLine: {
-          show: false
-        },
-        data: [
-          {
-            value: taskStats.value.notStarted,
-            name: "未开始",
-            itemStyle: { color: "#909399" }
-          },
-          {
-            value: taskStats.value.inProgress,
-            name: "进行中",
-            itemStyle: { color: "#409EFF" }
-          },
-          {
-            value: taskStats.value.completed,
-            name: "已完成",
-            itemStyle: { color: "#67C23A" }
-          },
-          {
-            value: taskStats.value.overdue,
-            name: "已逾期",
-            itemStyle: { color: "#F56C6C" }
-          }
-        ]
-      }
-    ]
-  };
+  if (task) {
+    // 添加一些额外的详情数据
+    taskDetail.value = {
+      ...task,
+      description:
+        task.type === "需求"
+          ? "这是一个详细的需求分析任务，需要对整个项目进行全面的分析，包括功能需求、非功能需求、用户故事等内容。"
+          : task.type === "开发"
+            ? "这是一个核心开发任务，需要按照设计文档和需求规格进行代码实现，确保代码质量和性能。"
+            : task.type === "测试"
+              ? "这是一个测试任务，需要编写测试用例，执行功能测试和性能测试，确保产品质量。"
+              : "这是一个重要的项目任务，需要认真完成。",
+      progress:
+        task.status === "已完成"
+          ? 100
+          : task.status === "进行中"
+            ? Math.floor(Math.random() * 80) + 10
+            : 0,
+      createTime: "2025-01-15 10:30",
+      updateTime: "2025-06-07 14:20"
+    };
 
-  chartInstance.setOption(option);
-  window.addEventListener("resize", () => {
-    chartInstance.resize();
-  });
+    // 设置操作记录
+    taskActions.value = mockActions;
+  }
 }
 
 onMounted(() => {
-  nextTick(() => {
-    initProjectTaskChart();
-    initTaskStatusChart();
-  });
+  loadTaskDetail();
 });
 </script>
 
 <style scoped>
-.task-management {
-  padding: 16px;
+.task-detail {
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #f5f5f5;
 }
 
-.mt-16 {
-  margin-top: 16px;
-}
-
-.stats-card {
-  margin-bottom: 16px;
-}
-
-.stats-container {
+.page-header {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 16px 24px;
+  justify-content: space-between;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 10%);
 }
 
-.stat-value {
-  margin-bottom: 8px;
-  font-size: 28px;
-  font-weight: bold;
+.header-left {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.back-button {
+  font-size: 14px;
+  color: #606266;
+}
+
+.back-button:hover {
+  color: #409eff;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
   color: #303133;
 }
 
-.stat-label {
-  font-size: 14px;
-  color: #606266;
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.detail-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+}
+
+.mt-20 {
+  margin-top: 20px;
 }
 
 .card-header {
@@ -739,39 +601,140 @@ onMounted(() => {
   justify-content: space-between;
 }
 
-.header-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.search-input {
-  width: 200px;
-}
-
-.font-medium {
+.card-title {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   color: #303133;
 }
 
-.task-name-cell {
+.task-info {
+  padding: 0;
+}
+
+.info-row {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 20px;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-item {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  align-items: center;
+}
+
+.label {
+  min-width: 80px;
+  font-weight: 500;
+  color: #606266;
+}
+
+.value {
+  font-weight: 400;
+  color: #303133;
+}
+
+.task-name {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.assignee-info {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-.pagination-container {
+.assignee-avatar {
+  font-weight: 600;
+  color: white;
+  background-color: #409eff;
+}
+
+.assignee-name {
+  font-weight: 500;
+}
+
+.task-description {
+  padding: 0;
+  line-height: 1.6;
+  color: #606266;
+}
+
+.no-description {
+  font-style: italic;
+  color: #c0c4cc;
+}
+
+.task-progress {
+  padding: 0;
+}
+
+.progress-info {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.progress-status {
+  font-size: 12px;
+  color: #909399;
+}
+
+.time-info {
+  padding: 0;
+}
+
+.time-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.time-item:last-child {
+  margin-bottom: 0;
+}
+
+.time-item .el-icon {
+  margin-top: 2px;
+  color: #909399;
+}
+
+.time-content {
+  flex: 1;
+}
+
+.time-label {
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #909399;
+}
+
+.time-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
+}
+
+.action-timeline {
+  padding: 0;
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  margin-top: 16px;
-}
-
-.chart-card {
   height: 400px;
-}
-
-.chart-container {
-  height: 320px;
 }
 
 .overdue-date {
