@@ -205,12 +205,12 @@ function onProjectSelected(project: any): void {
 
 // 更新页面标题
 function updateTabTitle(): void {
-  const projectId =
-    props.id || currentProject.value?.id || latestProject.value?.id;
+  // 优先获取当前项目名称，其次尝试最新项目名称
+  const projectName = currentProject.value?.value || latestProject.value?.value;
 
-  if (projectId) {
-    // 动态设置标签页标题
-    document.title = `项目详情-${projectId}`;
+  if (projectName) {
+    // 动态设置标签页标题为项目名称
+    document.title = projectName;
 
     // 如果使用了标签页管理系统，可以更新标签名称
     const routeMatched =
@@ -218,7 +218,7 @@ function updateTabTitle(): void {
         router.currentRoute.value.matched.length - 1
       ];
     if (routeMatched) {
-      routeMatched.meta.title = `项目详情-${projectId}`;
+      routeMatched.meta.title = projectName;
     }
   }
 }
