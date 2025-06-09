@@ -18,7 +18,9 @@
         <el-button type="primary" :icon="Edit" @click="openEditDialog"
           >编辑任务</el-button
         >
-        <el-button type="danger" :icon="Delete">删除任务</el-button>
+        <el-button type="danger" :icon="Delete" @click="openDeleteDialog"
+          >删除任务</el-button
+        >
       </div>
 
       <EditTaskDialog
@@ -26,6 +28,12 @@
         v-model:visible="editDialogVisible"
         :task="editTask"
         @update="handleEditUpdate"
+      />
+      <DeleteTaskDialog
+        v-if="taskDetail"
+        v-model:visible="deleteDialogVisible"
+        :taskName="taskDetail.name"
+        @delete="handleDeleteTask"
       />
     </div>
 
@@ -227,6 +235,7 @@ import {
   Timer
 } from "@element-plus/icons-vue";
 import EditTaskDialog from "./components/EditTaskDialog.vue";
+import DeleteTaskDialog from "./components/DeleteTaskDialog.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -236,6 +245,17 @@ const taskActions = ref([]);
 // 编辑弹窗相关
 const editDialogVisible = ref(false);
 const editTask = ref({});
+
+// 删除弹窗相关
+const deleteDialogVisible = ref(false);
+function openDeleteDialog() {
+  deleteDialogVisible.value = true;
+}
+function handleDeleteTask() {
+  // 这里只做前端模拟，实际可跳转或清空
+  taskDetail.value = null;
+  // 例如：router.push('/TaskManagement');
+}
 
 function openEditDialog() {
   editTask.value = { ...taskDetail.value };
