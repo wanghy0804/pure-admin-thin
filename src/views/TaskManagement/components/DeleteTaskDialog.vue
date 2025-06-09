@@ -10,14 +10,14 @@
     </div>
     <div style="margin-bottom: 12px">请输入下方验证码以确认删除：</div>
     <div
-      style=" display: flex; gap: 12px; align-items: center;margin-bottom: 18px"
+      style="display: flex; gap: 12px; align-items: center; margin-bottom: 18px"
     >
       <span
         style="
           padding: 4px 12px;
           font-size: 20px;
           letter-spacing: 2px;
-          user-select: all;
+          user-select: none;
           background: #f5f7fa;
           border-radius: 4px;
         "
@@ -35,7 +35,7 @@
     />
     <div
       v-if="errorMsg"
-      style=" margin-bottom: 8px; font-size: 13px;color: #f56c6c"
+      style="margin-bottom: 8px; font-size: 13px; color: #f56c6c"
     >
       {{ errorMsg }}
     </div>
@@ -59,11 +59,11 @@ const inputCode = ref("");
 const code = ref("");
 const errorMsg = ref("");
 
-const CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZabdefghpqrty23456789";
 
 function generateCode() {
   let result = "";
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 4; i++) {
     result += CHARSET.charAt(Math.floor(Math.random() * CHARSET.length));
   }
   return result;
