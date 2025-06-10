@@ -23,7 +23,8 @@ export default {
       meta: {
         title: "任务详情",
         icon: "fluent-color:drafts-16",
-        dynamicNewTab: true
+        dynamicNewTab: true,
+        dynamicLevel: 1
       },
       props: true
     }

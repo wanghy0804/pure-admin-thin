@@ -100,13 +100,16 @@ export const useMultiTagsStore = defineStore("pure-multiTags", {
             // 动态路由可打开的最大数量
             const dynamicLevel = tagVal?.meta?.dynamicLevel ?? -1;
             if (dynamicLevel > 0) {
-              if (
-                this.multiTags.filter(e => e?.path === tagPath).length >=
-                dynamicLevel
-              ) {
-                // 如果当前已打开的动态路由数大于dynamicLevel，替换第一个动态路由标签
+              // 对于动态路由，应该基于路由名称而不是路径来限制数量
+              const sameName = tagVal?.name;
+              const sameNameTags = this.multiTags.filter(
+                e => e?.name === sameName
+              );
+
+              if (sameNameTags.length >= dynamicLevel) {
+                // 如果当前已打开的同名动态路由数大于dynamicLevel，替换第一个动态路由标签
                 const index = this.multiTags.findIndex(
-                  item => item?.path === tagPath
+                  item => item?.name === sameName
                 );
                 index !== -1 && this.multiTags.splice(index, 1);
               }

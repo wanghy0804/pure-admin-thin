@@ -168,6 +168,7 @@
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { Search, WarningFilled } from "@element-plus/icons-vue";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 
 const router = useRouter();
 const searchQuery = ref("");
@@ -488,7 +489,24 @@ function isOverdue(dateString) {
 
 // 跳转到任务详情
 function viewTaskDetail(taskId) {
-  router.push(`/TaskManagement/detail/${taskId}`);
+  const multiTags = useMultiTagsStoreHook();
+  const targetPath = `/TaskManagement/detail/${taskId}`;
+
+  // 查找是否已经有任务详情标签
+  const existingTaskTagIndex = multiTags.multiTags.findIndex(
+    tag => tag.name === "TaskManagementDetail"
+  );
+
+  if (existingTaskTagIndex !== -1) {
+    // 如果已有任务详情标签，直接移除它，让新的路由重新创建
+    multiTags.handleTags("splice", "", {
+      startIndex: existingTaskTagIndex,
+      length: 1
+    });
+  }
+
+  // 执行路由跳转
+  router.push(targetPath);
 }
 
 // 跳转到项目详情

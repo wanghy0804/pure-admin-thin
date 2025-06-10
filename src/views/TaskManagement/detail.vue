@@ -223,7 +223,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import {
   ArrowLeft,
@@ -236,6 +236,7 @@ import {
 } from "@element-plus/icons-vue";
 import EditTaskDialog from "./components/EditTaskDialog.vue";
 import DeleteTaskDialog from "./components/DeleteTaskDialog.vue";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 
 const router = useRouter();
 const route = useRoute();
@@ -547,9 +548,55 @@ function getProgressType(progress) {
   return "success";
 }
 
+// 更新标签标题
+function updateTaskTabTitle() {
+  const taskName = taskDetail.value?.name;
+
+  if (taskName) {
+    // 动态设置标签页标题为任务名称
+    document.title = taskName;
+
+    // 更新当前路由的 meta.title
+    if (route.meta) {
+      route.meta.title = taskName;
+    }
+
+    // 如果使用了多标签页管理系统，更新对应标签的标题
+    const multiTags = useMultiTagsStoreHook();
+    const currentPath = route.path;
+
+    // 查找当前路径对应的标签
+    const currentTagIndex = multiTags.multiTags.findIndex(tag => {
+      // 精确匹配当前路径
+      if (tag.path === currentPath) return true;
+
+      // 对于任务详情页的特殊处理
+      if (
+        tag.name === "TaskManagementDetail" &&
+        route.name === "TaskManagementDetail"
+      ) {
+        const tagId = tag.path.split("/").pop();
+        const currentId = currentPath.split("/").pop();
+        return tagId === currentId;
+      }
+
+      return false;
+    });
+
+    if (currentTagIndex !== -1) {
+      // 更新找到的标签的标题
+      multiTags.multiTags[currentTagIndex].meta.title = taskName;
+      // 缓存更新
+      multiTags.tagsCache(multiTags.multiTags);
+    }
+  }
+}
+
 // 加载任务详情
 function loadTaskDetail() {
-  const taskId = parseInt(route.params.id);
+  const paramId = route.params.id;
+  if (!paramId || Array.isArray(paramId)) return;
+  const taskId = parseInt(paramId);
   const task = allTasks.value.find(t => t.id === taskId);
 
   if (task) {
@@ -576,27 +623,45 @@ function loadTaskDetail() {
 
     // 设置操作记录
     taskActions.value = mockActions;
+
+    // 更新标签标题
+    updateTaskTabTitle();
   }
 }
 
 onMounted(() => {
-  // 判断路由参数是否有id
-  if (!route.params.id) {
-    // 找到最新的任务（id最大）
+  const routeId = route.params.id;
+
+  if (routeId && typeof routeId === "string") {
+    // 有路由参数，直接加载对应任务
+    loadTaskDetail();
+  } else {
+    // 没有路由参数，找到最新的任务并重定向
     const latestTask = allTasks.value.reduce(
       (prev, curr) => (curr.id > prev.id ? curr : prev),
       allTasks.value[0]
     );
     if (latestTask) {
-      router.replace({
-        name: route.name,
-        params: { ...route.params, id: latestTask.id }
-      });
+      // 使用 replace 避免在历史记录中留下无ID的路径
+      router.replace(`/TaskManagement/detail/${latestTask.id}`);
       return;
     }
   }
-  loadTaskDetail();
 });
+
+// 监听路由参数变化
+watch(
+  () => route.params.id,
+  (newId, oldId) => {
+    // 避免初始化时重复执行
+    if (newId === oldId) return;
+
+    if (newId && typeof newId === "string") {
+      loadTaskDetail();
+    }
+  },
+  { immediate: false } // 不立即执行，避免与 onMounted 重复
+);
 </script>
 
 <style scoped>

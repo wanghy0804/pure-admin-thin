@@ -95,6 +95,7 @@ import ProjectRisks from "./components/ProjectRisks.vue";
 import ProjectDocs from "./components/ProjectDocs.vue";
 import ProjectStats from "./components/ProjectStats.vue";
 import ProjectSearchBar from "./components/ProjectSearchBar.vue";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 
 // 路由和标签相关
 const route = useRoute();
@@ -197,9 +198,13 @@ function fetchLatestProject(): void {
 function onProjectSelected(project: any): void {
   currentProject.value = project;
 
-  // 更新路由，打开新标签
+  // 更新路由，但避免重复推送相同的路由
   if (project && project.id) {
-    router.push(`/ProjectManagement/detail/${project.id}`);
+    const targetPath = `/ProjectManagement/detail/${project.id}`;
+    // 只有当前路由不是目标路由时才进行跳转
+    if (route.path !== targetPath) {
+      router.push(targetPath);
+    }
   }
 }
 
@@ -212,25 +217,59 @@ function updateTabTitle(): void {
     // 动态设置标签页标题为项目名称
     document.title = projectName;
 
-    // 如果使用了标签页管理系统，可以更新标签名称
-    const routeMatched =
-      router.currentRoute.value.matched[
-        router.currentRoute.value.matched.length - 1
-      ];
-    if (routeMatched) {
-      routeMatched.meta.title = projectName;
+    // 更新当前路由的 meta.title，这样标签页会显示项目名称
+    if (route.meta) {
+      route.meta.title = projectName;
+    }
+
+    // 如果使用了多标签页管理系统，更新对应标签的标题
+    const multiTags = useMultiTagsStoreHook();
+    const currentPath = route.path;
+
+    // 查找当前路径对应的标签
+    const currentTagIndex = multiTags.multiTags.findIndex(tag => {
+      // 精确匹配当前路径
+      if (tag.path === currentPath) return true;
+
+      // 对于项目详情页的特殊处理，检查是否为相同的项目详情页
+      if (
+        tag.name === "ProjectManagementDetail" &&
+        route.name === "ProjectManagementDetail"
+      ) {
+        // 如果路径中都包含项目ID，进一步检查
+        const tagId = tag.path.split("/").pop();
+        const currentId = currentPath.split("/").pop();
+        return tagId === currentId;
+      }
+
+      return false;
+    });
+
+    if (currentTagIndex !== -1) {
+      // 更新找到的标签的标题
+      multiTags.multiTags[currentTagIndex].meta.title = projectName;
+      // 缓存更新
+      multiTags.tagsCache(multiTags.multiTags);
     }
   }
 }
 
 // 监听路由参数变化
 watch(
-  () => props.id,
-  newId => {
-    if (newId) {
+  () => route.params.id,
+  (newId, oldId) => {
+    // 避免初始化时重复执行
+    if (newId === oldId) return;
+
+    if (newId && typeof newId === "string") {
       const project = fetchProject(newId);
       if (project) {
         currentProject.value = project;
+      }
+    } else {
+      // 如果没有 ID 参数，显示最新项目但不重新加载
+      if (!currentProject.value && !latestProject.value) {
+        fetchLatestProject();
       }
     }
     updateTabTitle();
@@ -247,14 +286,17 @@ watch(
 );
 
 onMounted(() => {
-  // 如果有路由参数，根据参数加载项目
-  if (props.id) {
-    const project = fetchProject(props.id);
+  // 根据路由参数初始化项目数据
+  const routeId = route.params.id;
+
+  if (routeId && typeof routeId === "string") {
+    // 有路由参数，加载对应项目
+    const project = fetchProject(routeId);
     if (project) {
       currentProject.value = project;
     }
   } else {
-    // 否则加载最新项目
+    // 没有路由参数，加载最新项目
     fetchLatestProject();
   }
 
