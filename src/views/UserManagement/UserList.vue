@@ -29,7 +29,7 @@
     <el-dialog
       v-model="userDialogVisible"
       :title="userDialogMode === 'add' ? '新增用户' : '编辑用户'"
-      width="400px"
+      width="500px"
       @close="closeUserDialog"
     >
       <el-form :model="userForm" label-width="80px" style="padding: 0 20px">

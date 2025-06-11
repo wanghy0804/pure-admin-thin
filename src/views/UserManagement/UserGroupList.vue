@@ -31,7 +31,7 @@
     <el-dialog
       v-model="groupDialogVisible"
       :title="groupDialogMode === 'add' ? '新增用户组' : '编辑用户组'"
-      width="400px"
+      width="500px"
       @close="closeGroupDialog"
     >
       <el-form :model="groupForm" label-width="100px" style="padding: 0 20px">
