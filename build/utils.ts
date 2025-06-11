@@ -36,10 +36,10 @@ const pathResolve = (dir = ".", metaUrl = import.meta.url) => {
 };
 
 /** 设置别名 */
-const alias: Record<string, string> = {
-  "@": pathResolve("../src"),
-  "@build": pathResolve()
-};
+const alias = [
+  { find: "@", replacement: pathResolve("../src") },
+  { find: "@build", replacement: pathResolve() }
+];
 
 /** 平台的名称、版本、运行所需的`node`和`pnpm`版本、依赖、最后构建时间的类型提示 */
 const __APP_INFO__ = {

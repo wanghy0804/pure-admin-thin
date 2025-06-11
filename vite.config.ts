@@ -1,4 +1,5 @@
 import { getPluginsList } from "./build/plugins";
+import path from "path";
 import { include, exclude } from "./build/optimize";
 import { type UserConfigExport, type ConfigEnv, loadEnv } from "vite";
 import {
@@ -16,7 +17,10 @@ export default ({ mode }: ConfigEnv): UserConfigExport => {
     base: VITE_PUBLIC_PATH,
     root,
     resolve: {
-      alias
+      alias: [
+        { find: "@", replacement: path.resolve(__dirname, "src") },
+        ...alias
+      ]
     },
     // 服务端渲染
     server: {
