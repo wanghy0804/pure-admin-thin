@@ -30,6 +30,32 @@ export function getDynamicPermissionOptions() {
       ]
     },
     {
+      code: "task",
+      title: "任务管理",
+      children: [
+        {
+          code: "task:view",
+          title: "任务查看",
+          actions: ["read"]
+        },
+        {
+          code: "task:create",
+          title: "任务创建",
+          actions: ["create"]
+        },
+        {
+          code: "task:edit",
+          title: "任务编辑",
+          actions: ["update"]
+        },
+        {
+          code: "task:delete",
+          title: "任务删除",
+          actions: ["delete"]
+        }
+      ]
+    },
+    {
       code: "user",
       title: "用户管理",
       children: [
