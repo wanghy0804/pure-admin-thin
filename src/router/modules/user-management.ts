@@ -57,7 +57,7 @@ export default {
       meta: {
         title: "用户权限",
         roles: ["admin", "user-admin"],
-        icon: "fluent-color:person-feedback-16"
+        icon: "fluent-color:contact-card-16"
       },
       component: () => import("@/views/UserManagement/UserPermissions.vue")
     },

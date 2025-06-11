@@ -3,7 +3,7 @@
     <template #header>
       <span>新增用户</span>
     </template>
-    <el-form :model="form" label-width="80px" style="max-width: 400px">
+    <el-form :model="form" label-width="100px" style="max-width: 400px">
       <el-form-item label="用户名">
         <el-input v-model="form.username" />
       </el-form-item>

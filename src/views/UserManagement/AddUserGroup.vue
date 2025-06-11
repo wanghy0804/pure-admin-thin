@@ -3,7 +3,7 @@
     <template #header>
       <span>新增用户组</span>
     </template>
-    <el-form :model="form" label-width="80px" style="max-width: 400px">
+    <el-form :model="form" label-width="100px" style="max-width: 400px">
       <el-form-item label="用户组名称">
         <el-input v-model="form.groupName" />
       </el-form-item>
