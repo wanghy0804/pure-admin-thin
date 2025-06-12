@@ -3,16 +3,17 @@
 export default {
   path: "/user-management",
   name: "UserManagement",
+  component: () => import("@/views/UserManagement/index.vue"),
+  redirect: "/user-management/user-list",
   meta: {
     title: "用户管理",
     icon: "fluent-color:layer-diagonal-person-16",
     rank: 3,
     roles: ["admin", "user-admin"]
   },
-  component: () => import("@/views/UserManagement/index.vue"),
   children: [
     {
-      path: "user-list",
+      path: "/user-management/user-list",
       name: "UserList",
       meta: {
         title: "用户列表",
@@ -22,7 +23,7 @@ export default {
       component: () => import("@/views/UserManagement/UserList.vue")
     },
     {
-      path: "group-list",
+      path: "/user-management/group-list",
       name: "UserGroupList",
       meta: {
         title: "用户组列表",
@@ -32,7 +33,7 @@ export default {
       component: () => import("@/views/UserManagement/UserGroupList.vue")
     },
     {
-      path: "add-user",
+      path: "/user-management/add-user",
       name: "AddUser",
       meta: {
         title: "新增用户",
@@ -42,7 +43,7 @@ export default {
       component: () => import("@/views/UserManagement/AddUser.vue")
     },
     {
-      path: "add-group",
+      path: "/user-management/add-group",
       name: "AddUserGroup",
       meta: {
         title: "新增用户组",
@@ -52,7 +53,7 @@ export default {
       component: () => import("@/views/UserManagement/AddUserGroup.vue")
     },
     {
-      path: "user-permissions",
+      path: "/user-management/user-permissions",
       name: "UserPermissions",
       meta: {
         title: "用户权限",
@@ -62,7 +63,7 @@ export default {
       component: () => import("@/views/UserManagement/UserPermissions.vue")
     },
     {
-      path: "group-permissions",
+      path: "/user-management/group-permissions",
       name: "UserGroupPermissions",
       meta: {
         title: "用户组权限",
