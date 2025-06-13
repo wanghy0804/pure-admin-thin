@@ -1,9 +1,5 @@
 <template>
   <div class="ProjectManagement-detail">
-    <div class="project-search-section">
-      <ProjectSearchBar @project-selected="onProjectSelected" />
-    </div>
-
     <div class="project-header">
       <div class="project-title">
         <h1 v-if="currentProject">
@@ -94,7 +90,6 @@ import ProjectResources from "./components/ProjectResources.vue";
 import ProjectRisks from "./components/ProjectRisks.vue";
 import ProjectDocs from "./components/ProjectDocs.vue";
 import ProjectStats from "./components/ProjectStats.vue";
-import ProjectSearchBar from "./components/ProjectSearchBar.vue";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 
 // 路由和标签相关
@@ -443,11 +438,6 @@ onMounted(() => {
   background-color: #f5f7fa;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
-}
-
-/* 覆盖 ProjectSearchBar 组件的样式 */
-:deep(.project-search-bar) {
-  width: 100%;
 }
 
 :deep(.project-search-bar .el-input) {
