@@ -184,6 +184,32 @@ pnpm dev
 pnpm build
 ```
 
+## 环境变量说明
+
+本项目使用多套环境变量文件（`.env`、`.env.development`、`.env.production`、`.env.staging`），用于控制开发、预发、生产等不同环境的行为。下表列出了所有可能的环境变量及其作用：
+
+| 变量名              | 说明                                                                            | 示例/默认值 | 适用环境               |
+| ------------------- | ------------------------------------------------------------------------------- | ----------- | ---------------------- |
+| VITE_PORT           | 本地开发服务器端口号。                                                          | 8848        | .env, .env.development |
+| VITE_HIDE_HOME      | 是否隐藏首页。true 隐藏首页，false 不隐藏（仅 .env 文件）。                     | false       | .env                   |
+| VITE_PUBLIC_PATH    | 平台打包/运行的基础路径。影响静态资源与路由的前缀。                             | /           | 所有环境               |
+| VITE_ROUTER_HISTORY | 路由模式。可选："hash"（哈希）、"h5"（HTML5）、"hash,base参数"、"h5,base参数"。 | "hash"      | 所有环境               |
+| VITE_CDN            | 是否在打包时使用 CDN 替换本地库。true 启用 CDN，false 不启用。                  | true/false  | production, staging    |
+| VITE_COMPRESSION    | 是否启用 gzip/brotli 压缩及其策略。详见下方注释。                               | "none"      | production, staging    |
+| NODE_ENV            | Node 环境变量（一般不用手动配置，部分环境如 staging 文件有注释）。              | development | staging（注释）        |
+
+### VITE_COMPRESSION 说明
+
+- 可选值：`none`（默认，不启用压缩）、`gzip`、`brotli`、`both`（同时启用 gzip 和 brotli）
+- 也可用 `gzip-clear`、`brotli-clear`、`both-clear`，表示压缩后删除原始文件。
+
+### 示例
+
+- 开发环境使用 `.env.development`，生产环境使用 `.env.production`，预发环境使用 `.env.staging`。
+- 如需自定义端口或路由模式，可在对应 env 文件中修改。
+
+> 建议根据实际部署环境选择和调整上述变量。
+
 ## 维护者
 
 [xiaoxian521](https://github.com/xiaoxian521)
